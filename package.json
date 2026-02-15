@@ -1,0 +1,44 @@
+{
+	"name": "@vforsh/phaser-dev-ui",
+	"version": "0.1.0",
+	"description": "Pure-code debug UI primitives for Phaser 3 games — panels, buttons, labels, badges, progress bars, switch buttons, and layout containers. No assets required.",
+	"type": "module",
+	"main": "dist/index.js",
+	"module": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "bun run scripts/build.ts",
+		"typecheck": "tsc --noEmit",
+		"typecheck:watch": "tsc --noEmit --watch",
+		"playground": "bun --hot playground/serve.ts",
+		"prepublishOnly": "bun run build"
+	},
+	"keywords": [
+		"phaser",
+		"phaser3",
+		"debug",
+		"dev-ui",
+		"hud",
+		"gamedev"
+	],
+	"author": "Vladislav Forsh <vforsh@gmail.com>",
+	"license": "MIT",
+	"peerDependencies": {
+		"phaser": "^3.60.0"
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"get-port": "^7.1.0",
+		"phaser": "3.88.2",
+		"typescript": "^5.9.0"
+	}
+}

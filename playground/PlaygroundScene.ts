@@ -1,0 +1,516 @@
+/**
+ * Playground scene that showcases all debug UI primitives.
+ *
+ * Creates one instance of each component type so they can be
+ * visually inspected and interacted with during development.
+ * Content is split into pages with a bottom-center paginator.
+ */
+
+import {
+	createDebugPanel,
+	createDebugLabel,
+	createDebugButton,
+	createDebugBadge,
+	createDebugProgressBar,
+	createDebugSwitchButton,
+	createDebugScrollContainer,
+	createRowContainer,
+	createColumnContainer,
+	createGridContainer,
+} from "../src/index.js"
+import { createAppController } from "./AppController.js"
+
+import type { DebugProgressBar } from "../src/DebugProgressBar.js"
+
+const CONTENT_Y = 600
+const PAGINATOR_Y_OFFSET = 120
+const PANEL_WIDTH = 340
+const PANEL_HEIGHT = 400
+const PANEL_TITLE_Y = -160
+
+export class PlaygroundScene extends Phaser.Scene {
+	private _progressBar!: DebugProgressBar
+	private _progressDirection = 1
+	private _pages: Phaser.GameObjects.Container[] = []
+	private _currentPage = 0
+	private _pageLabel!: Phaser.GameObjects.Text
+
+	constructor() {
+		super({ key: "PlaygroundScene" })
+	}
+
+	create(): void {
+		const appctl = createAppController(this.game)
+		const { width, height } = this.scale
+
+		// ── Title ──
+		const title = createDebugLabel(this, {
+			text: "phaser-dev-ui Playground",
+			fontSize: 28,
+			isBold: true,
+			position: { x: width / 2, y: 30 },
+		})
+		appctl.registerNode("title", title)
+
+		// ── Page 1: Buttons ──
+		const page1 = this.add.container(width / 2, CONTENT_Y)
+		const panel = createDebugPanel(this, {
+			width: PANEL_WIDTH,
+			height: PANEL_HEIGHT,
+			cornerRadius: 12,
+			position: { x: 0, y: 0 },
+			blockInputEvents: true,
+		})
+		appctl.registerNode("main-panel", panel)
+
+		const panelTitle = createDebugLabel(this, {
+			text: "Button Showcase",
+			fontSize: 20,
+			isBold: true,
+			position: { x: 0, y: PANEL_TITLE_Y },
+		})
+		panel.add(panelTitle)
+
+		const normalBtn = createDebugButton(this, {
+			text: "Normal",
+			width: 140,
+			height: 50,
+			onClick: (btn) => {
+				console.log("Normal button clicked!")
+				btn.setText("Clicked!")
+				this.time.delayedCall(800, () => btn.setText("Normal"))
+			},
+		})
+		appctl.registerNode("btn-normal", normalBtn)
+
+		const styledBtn = createDebugButton(this, {
+			text: "Styled",
+			width: 140,
+			height: 50,
+		})
+		styledBtn.setBgColor("#1a3a5c", "#2a5a8c").setTextColor("#66aaff", "#99ccff")
+		appctl.registerNode("btn-styled", styledBtn)
+
+		const disabledBtn = createDebugButton(this, {
+			text: "Disabled",
+			width: 140,
+			height: 50,
+			enabled: false,
+		})
+		appctl.registerNode("btn-disabled", disabledBtn)
+
+		const toggleBtn = createDebugButton(this, {
+			text: "Toggle ↑",
+			width: 140,
+			height: 50,
+			onClick: () => {
+				const newState = !disabledBtn.isEnabled()
+				disabledBtn.setEnabled(newState)
+				toggleBtn.setText(newState ? "Toggle ↓" : "Toggle ↑")
+			},
+		})
+		appctl.registerNode("btn-toggle", toggleBtn)
+
+		const btnGrid = createGridContainer(this, {
+			columns: 2,
+			cellWidth: 150,
+			cellHeight: 60,
+			spacingX: 10,
+			spacingY: 12,
+		})
+		btnGrid.addItems([normalBtn, styledBtn, disabledBtn, toggleBtn])
+		btnGrid.layout()
+		const gridW = btnGrid.getContentWidth()
+		btnGrid.setPosition(-gridW / 2, -95)
+		panel.add(btnGrid)
+
+		normalBtn.add(
+			createDebugBadge(this, {
+				text: "NEW",
+				bgColor: "#cc3333",
+				position: { x: 55, y: -20 },
+			}),
+		)
+		page1.add(panel)
+
+		// ── Page 2: Switch + Progress ──
+		const page2 = this.add.container(width / 2, CONTENT_Y)
+		const centerPanel = createDebugPanel(this, {
+			width: PANEL_WIDTH,
+			height: PANEL_HEIGHT,
+			cornerRadius: 12,
+			position: { x: 0, y: 0 },
+		})
+		appctl.registerNode("center-panel", centerPanel)
+
+		const centerTitle = createDebugLabel(this, {
+			text: "Controls",
+			fontSize: 20,
+			isBold: true,
+			position: { x: 0, y: PANEL_TITLE_Y },
+		})
+		centerPanel.add(centerTitle)
+
+		const qualitySwitch = createDebugSwitchButton(this, {
+			options: [
+				{ key: "low", value: "Low Quality" },
+				{ key: "medium", value: "Medium Quality" },
+				{ key: "high", value: "High Quality" },
+				{ key: "ultra", value: "Ultra Quality" },
+			],
+			size: { width: 280, height: 44 },
+			bgColor: "#333333",
+			textColor: "#ffffff",
+			arrowColor: "#ffffff",
+			position: { x: 0, y: -95 },
+		})
+		qualitySwitch.onOptionChanged((opt, idx) => {
+			console.log(`Quality → ${opt.key} (index ${idx})`)
+		})
+		centerPanel.add(qualitySwitch)
+		appctl.registerNode("switch-quality", qualitySwitch)
+
+		const themeSwitch = createDebugSwitchButton(this, {
+			options: [
+				{ key: "dark", value: "Dark Theme" },
+				{ key: "light", value: "Light Theme" },
+				{ key: "solarized", value: "Solarized" },
+			],
+			size: { width: 280, height: 44 },
+			bgColor: "#1a1a2e",
+			textColor: "#e0e0e0",
+			arrowColor: "#7070ff",
+			strokeColor: "#3030aa",
+			strokeThickness: 2,
+			position: { x: 0, y: -40 },
+		})
+		centerPanel.add(themeSwitch)
+		appctl.registerNode("switch-theme", themeSwitch)
+
+		const disabledSwitch = createDebugSwitchButton(this, {
+			options: [
+				{ key: "on", value: "Enabled" },
+				{ key: "off", value: "Disabled" },
+			],
+			size: { width: 280, height: 44 },
+			bgColor: "#333333",
+			textColor: "#ffffff",
+			arrowColor: "#ffffff",
+			enabled: false,
+			position: { x: 0, y: 15 },
+		})
+		centerPanel.add(disabledSwitch)
+		appctl.registerNode("switch-disabled", disabledSwitch)
+
+		const progressLabel = createDebugLabel(this, {
+			text: "Progress Bars",
+			fontSize: 16,
+			color: "#999999",
+			position: { x: 0, y: 72 },
+		})
+		centerPanel.add(progressLabel)
+
+		this._progressBar = createDebugProgressBar(this, {
+			width: 280,
+			height: 12,
+			fillColor: "#4caf50",
+			position: { x: 0, y: 100 },
+			value: 0.0,
+		})
+		centerPanel.add(this._progressBar)
+		appctl.registerNode("progress-animated", this._progressBar)
+
+		const halfBar = createDebugProgressBar(this, {
+			width: 280,
+			height: 8,
+			fillColor: "#2196f3",
+			trackColor: "#1a1a3a",
+			value: 0.5,
+			position: { x: 0, y: 126 },
+		})
+		centerPanel.add(halfBar)
+		appctl.registerNode("progress-half", halfBar)
+
+		const fullBar = createDebugProgressBar(this, {
+			width: 280,
+			height: 8,
+			fillColor: "#ff9800",
+			value: 1.0,
+			position: { x: 0, y: 146 },
+		})
+		centerPanel.add(fullBar)
+		appctl.registerNode("progress-full", fullBar)
+		page2.add(centerPanel)
+
+		// ── Page 3: Labels & Layout ──
+		const page3 = this.add.container(width / 2, CONTENT_Y)
+		const rightPanel = createDebugPanel(this, {
+			width: PANEL_WIDTH,
+			height: PANEL_HEIGHT,
+			cornerRadius: 12,
+			position: { x: 0, y: 0 },
+		})
+		appctl.registerNode("right-panel", rightPanel)
+
+		const rightTitle = createDebugLabel(this, {
+			text: "Labels & Layout",
+			fontSize: 20,
+			isBold: true,
+			position: { x: 0, y: PANEL_TITLE_Y },
+		})
+		rightPanel.add(rightTitle)
+
+		const labelsColumn = createColumnContainer(this, { spacingY: 8 })
+		const labels = [
+			createDebugLabel(this, { text: "Default Label", fontSize: 16 }),
+			createDebugLabel(this, { text: "Bold Label", fontSize: 16, isBold: true }),
+			createDebugLabel(this, { text: "Italic Label", fontSize: 16, isItalic: true }),
+			createDebugLabel(this, {
+				text: "Colored Label",
+				fontSize: 16,
+				color: "#ff6b6b",
+				isBold: true,
+			}),
+			createDebugLabel(this, {
+				text: "Small Label",
+				fontSize: 12,
+				color: "#888888",
+			}),
+		]
+		labelsColumn.addItems(labels)
+		labelsColumn.layout()
+		labelsColumn.setPosition(0, -98)
+		rightPanel.add(labelsColumn)
+
+		const badgesLabel = createDebugLabel(this, {
+			text: "Badges",
+			fontSize: 16,
+			color: "#999999",
+			position: { x: 0, y: 14 },
+		})
+		rightPanel.add(badgesLabel)
+
+		const badgeRow = createRowContainer(this, { spacingX: 10 })
+		const badges = [
+			createDebugBadge(this, { text: "NEW", bgColor: "#cc3333" }),
+			createDebugBadge(this, { text: "WIP", bgColor: "#cc8800" }),
+			createDebugBadge(this, { text: "OK", bgColor: "#33aa33" }),
+			createDebugBadge(this, { text: "v1.2", bgColor: "#3366cc" }),
+			createDebugBadge(this, { text: "x5", bgColor: "#8833cc" }),
+		]
+		badgeRow.addItems(badges)
+		badgeRow.layout()
+		const rowW = badgeRow.getContentWidth()
+		badgeRow.setPosition(-rowW / 2, 42)
+		rightPanel.add(badgeRow)
+
+		const rowLabel = createDebugLabel(this, {
+			text: "Row Container",
+			fontSize: 16,
+			color: "#999999",
+			position: { x: 0, y: 88 },
+		})
+		rightPanel.add(rowLabel)
+
+		const demoRow = createRowContainer(this, { spacingX: 8 })
+		for (let i = 0; i < 3; i++) {
+			demoRow.addItem(
+				createDebugButton(this, {
+					text: `R${i + 1}`,
+					width: 80,
+					height: 36,
+					fontSize: 14,
+					onClick: () => console.log(`R${i + 1} clicked`),
+				}),
+			)
+		}
+		demoRow.layout()
+		const demoRowW = demoRow.getContentWidth()
+		demoRow.setPosition(-demoRowW / 2, 126)
+		rightPanel.add(demoRow)
+		page3.add(rightPanel)
+
+		// ── Page 4: Scroll Container ──
+		const page4 = this.add.container(width / 2, CONTENT_Y)
+		const scrollPanel = createDebugPanel(this, {
+			width: PANEL_WIDTH,
+			height: PANEL_HEIGHT,
+			cornerRadius: 12,
+			position: { x: 0, y: 0 },
+			blockInputEvents: true,
+		})
+		appctl.registerNode("scroll-panel", scrollPanel)
+
+		const scrollTitle = createDebugLabel(this, {
+			text: "Scroll Container",
+			fontSize: 20,
+			isBold: true,
+			position: { x: 0, y: PANEL_TITLE_Y },
+		})
+		scrollPanel.add(scrollTitle)
+
+		const scrollHint = createDebugLabel(this, {
+			text: "Mouse wheel over list or use controls",
+			fontSize: 13,
+			color: "#888888",
+			position: { x: 0, y: -132 },
+		})
+		scrollPanel.add(scrollHint)
+
+		const scrollView = createDebugScrollContainer(this, {
+			width: 280,
+			height: 210,
+			position: { x: 0, y: -12 },
+			bgColor: "#0a0a0a",
+			strokeColor: "#3f3f3f",
+			strokeThickness: 2,
+			cornerRadius: 8,
+			paddingLeft: 8,
+			paddingRight: 12,
+			paddingTop: 8,
+			paddingBottom: 8,
+			scrollbarEnabled: true,
+			scrollbarWidth: 6,
+			scrollbarColor: "#a3a3a3",
+			scrollbarTrackColor: "#1f1f1f",
+			wheelStep: 28,
+		})
+		appctl.registerNode("scroll-main", scrollView)
+		scrollPanel.add(scrollView)
+
+		const listContainer = this.add.container(0, 0)
+		for (let i = 0; i < 14; i++) {
+			const rowBtn = createDebugButton(this, {
+				text: `Action ${i + 1}`,
+				width: 216,
+				height: 34,
+				fontSize: 14,
+				onClick: () => console.log(`Scroll item clicked: ${i + 1}`),
+			})
+			rowBtn.setPosition(116, 22 + i * 42)
+			listContainer.add(rowBtn)
+			appctl.registerNode(`scroll-item-${i + 1}`, rowBtn)
+		}
+
+		scrollView.addItem(listContainer)
+		scrollView.layout()
+
+		const controlsRow = createRowContainer(this, { spacingX: 12 })
+		const toTopBtn = createDebugButton(this, {
+			text: "Top",
+			width: 90,
+			height: 36,
+			fontSize: 14,
+			onClick: () => scrollView.scrollToTop(),
+		})
+		const downBtn = createDebugButton(this, {
+			text: "+80",
+			width: 90,
+			height: 36,
+			fontSize: 14,
+			onClick: () => scrollView.scrollBy(80),
+		})
+		const toBottomBtn = createDebugButton(this, {
+			text: "Bottom",
+			width: 90,
+			height: 36,
+			fontSize: 14,
+			onClick: () => scrollView.scrollToBottom(),
+		})
+		controlsRow.addItems([toTopBtn, downBtn, toBottomBtn])
+		controlsRow.layout()
+		const controlsW = controlsRow.getContentWidth()
+		controlsRow.setPosition(-controlsW / 2, 132)
+		scrollPanel.add(controlsRow)
+		appctl.registerNode("scroll-top", toTopBtn)
+		appctl.registerNode("scroll-down", downBtn)
+		appctl.registerNode("scroll-bottom", toBottomBtn)
+
+		page4.add(scrollPanel)
+
+		this._pages = [page1, page2, page3, page4]
+		const startPage = Math.min(
+			Math.max(0, (globalThis as any).__PLAYGROUND_START_PAGE ?? 0),
+			this._pages.length - 1,
+		)
+		this._currentPage = startPage
+		this._showPage(startPage)
+
+		// ── Paginator (bottom center) ──
+		const paginatorY = height - PAGINATOR_Y_OFFSET
+		const prevBtn = createDebugButton(this, {
+			text: "←",
+			width: 80,
+			height: 48,
+			fontSize: 24,
+			position: { x: width / 2 - 100, y: paginatorY },
+			onClick: () => this._goToPage(this._currentPage - 1),
+		})
+		appctl.registerNode("paginator-prev", prevBtn)
+
+		this._pageLabel = this.add.text(width / 2, paginatorY, `${this._currentPage + 1} / ${this._pages.length}`, {
+			fontFamily: "Verdana",
+			fontSize: 18,
+			color: "#a3a3a3",
+		})
+		this._pageLabel.setOrigin(0.5)
+
+		const nextBtn = createDebugButton(this, {
+			text: "→",
+			width: 80,
+			height: 48,
+			fontSize: 24,
+			position: { x: width / 2 + 100, y: paginatorY },
+			onClick: () => this._goToPage(this._currentPage + 1),
+		})
+		appctl.registerNode("paginator-next", nextBtn)
+
+		// Arrow keys to switch pages
+		const leftKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT)
+		const rightKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT)
+		leftKey.on("down", () => this._goToPage(this._currentPage - 1))
+		rightKey.on("down", () => this._goToPage(this._currentPage + 1))
+
+		// ── Bottom info ──
+		createDebugLabel(this, {
+			text: "window.appctl is available — open the console to interact",
+			fontSize: 14,
+			color: "#666666",
+			position: { x: width / 2, y: height - 40 },
+		})
+
+		console.log("[playground] AppController installed on window.appctl")
+		console.log("[playground] Registered test IDs:", appctl.getRegisteredTestIds())
+	}
+
+	private _goToPage(index: number): void {
+		const maxPage = this._pages.length - 1
+		if (index < 0 || index > maxPage) return
+		this._currentPage = index
+		this._showPage(index)
+		this._pageLabel.setText(`${index + 1} / ${this._pages.length}`)
+	}
+
+	private _showPage(index: number): void {
+		for (let i = 0; i < this._pages.length; i++) {
+			this._pages[i].setVisible(i === index)
+		}
+	}
+
+	update(_time: number, delta: number): void {
+		if (!this._progressBar) return
+
+		let val = this._progressBar.getValue()
+		val += this._progressDirection * (delta / 3000)
+
+		if (val >= 1) {
+			val = 1
+			this._progressDirection = -1
+		} else if (val <= 0) {
+			val = 0
+			this._progressDirection = 1
+		}
+
+		this._progressBar.setValue(val)
+	}
+}

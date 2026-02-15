@@ -1,0 +1,40 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Typecheck",
+      "detail": "Run tsc --noEmit to verify TypeScript types",
+      "type": "npm",
+      "script": "typecheck",
+      "group": "build",
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "Typecheck (Watch)",
+      "detail": "Run typecheck in watch mode (auto-reruns on file changes)",
+      "type": "npm",
+      "script": "typecheck:watch",
+      "group": "build",
+      "isBackground": true,
+      "problemMatcher": ["$tsc-watch"]
+    },
+    {
+      "label": "Playground",
+      "detail": "Run the playground dev server with hot reload",
+      "type": "shell",
+      "command": "bun",
+      "args": ["--hot", "playground/serve.ts"],
+      "group": "test",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Build",
+      "detail": "Build dist/ (clean + tsc + emit ESM + source maps)",
+      "type": "npm",
+      "script": "build",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": ["$tsc"]
+    }
+  ]
+}

@@ -11,7 +11,7 @@
         "typescript": "^5.9.0",
       },
       "peerDependencies": {
-        "phaser": "^3.60.0",
+        "phaser": "3.88.2",
       },
     },
   },

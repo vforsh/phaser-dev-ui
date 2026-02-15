@@ -78,7 +78,7 @@ dist/                    Build output (git-ignored)
 
 ## Contracts / Invariants
 
-- **Phaser version**: Peer dep `^3.60.0`. Tested with 3.88.
+- **Phaser version**: Peer dep 3.88.2.
 - **ESM only**: Package type is `"module"`. No CJS output.
 - **No runtime deps**: Zero dependencies beyond Phaser peer.
 - **All primitives extend Phaser game objects**: `DebugPanel`/`DebugButton`/`DebugBadge`/`DebugSwitchButton`/`DebugScrollContainer`/containers extend `Container`; `DebugLabel` extends `Text`; `DebugProgressBar` extends `Container`.

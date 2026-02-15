@@ -33,7 +33,7 @@
 	"author": "Vladislav Forsh <vforsh@gmail.com>",
 	"license": "MIT",
 	"peerDependencies": {
-		"phaser": "^3.60.0"
+		"phaser": "3.88.2"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",

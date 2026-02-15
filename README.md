@@ -8,7 +8,7 @@ Pure-code debug UI primitives for Phaser 3 games — panels, buttons, labels, ba
 bun install
 ```
 
-Requires [Phaser](https://phaser.io) `^3.60.0` as a peer dependency.
+Requires [Phaser](https://phaser.io) 3.88.2 as a peer dependency.
 
 ## Quick Start
 

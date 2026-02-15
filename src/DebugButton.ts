@@ -1,4 +1,4 @@
-import type { ClickHandler, HexColor, Position, Size } from "./types.js"
+import type { ClickHandler, DebugImageIconOptions, HexColor, Position, Size } from "./types.js"
 import { dimHex, getDevicePixelRatio, hexToColorAlpha } from "./utils.js"
 
 type ButtonVisualState = "normal" | "hover" | "disabled"
@@ -6,6 +6,8 @@ type ButtonVisualState = "normal" | "hover" | "disabled"
 export interface CreateDebugButtonOptions {
 	/** Button text (default: "Button") */
 	text?: string
+	/** Optional image icon rendered next to text (or standalone for icon-only buttons). */
+	icon?: DebugImageIconOptions
 	/** Button width (default: 160) */
 	width?: number
 	/** Button height (default: 80) */
@@ -41,6 +43,7 @@ export class DebugButton extends Phaser.GameObjects.Container {
 	private _bg: Phaser.GameObjects.Graphics
 	private _shadow: Phaser.GameObjects.Graphics
 	private _label: Phaser.GameObjects.Text
+	private _icon: Phaser.GameObjects.Image | null = null
 	private _hitZone: Phaser.GameObjects.Zone
 
 	private _width: number
@@ -61,10 +64,12 @@ export class DebugButton extends Phaser.GameObjects.Container {
 
 	private _isHovering = false
 	private _isEnabled = true
+	private _iconOptions: DebugImageIconOptions | null = null
 
 	constructor(scene: Phaser.Scene, options: CreateDebugButtonOptions = {}) {
 		const {
 			text = "Button",
+			icon,
 			width = 160,
 			height = 80,
 			cornerRadius = 10,
@@ -102,10 +107,19 @@ export class DebugButton extends Phaser.GameObjects.Container {
 		})
 		this._label.setOrigin(0.5, 0.5)
 
+		if (icon) {
+			this._icon = scene.add.image(0, 0, icon.key, icon.frame)
+			this._icon.setOrigin(0.5, 0.5)
+			this._iconOptions = icon
+		}
+
 		this._hitZone = scene.add.zone(0, 0, width, height)
 		this._hitZone.setInteractive({ useHandCursor: true })
 
-		this.add([this._shadow, this._bg, this._label, this._hitZone])
+		const children: Phaser.GameObjects.GameObject[] = [this._shadow, this._bg]
+		if (this._icon) children.push(this._icon)
+		children.push(this._label, this._hitZone)
+		this.add(children)
 
 		// Default hover colors (matches Cocos version)
 		this._hoverBgColor = "#2a2a2a"
@@ -117,6 +131,7 @@ export class DebugButton extends Phaser.GameObjects.Container {
 		this._isEnabled = enabled
 		this.syncDerivedDisabledColors()
 		this.setupInteraction()
+		this.refreshContentLayout()
 
 		if (onClick) {
 			this._hitZone.on("pointerup", () => {
@@ -149,6 +164,7 @@ export class DebugButton extends Phaser.GameObjects.Container {
 
 	setText(text: string): this {
 		this._label.setText(text)
+		this.refreshContentLayout()
 		return this
 	}
 
@@ -156,6 +172,33 @@ export class DebugButton extends Phaser.GameObjects.Container {
 		this._normalTextColor = color
 		this._hoverTextColor = hoverColor ?? null
 		this.syncDerivedDisabledColors()
+		this.applyVisualState()
+		return this
+	}
+
+	setIcon(icon: DebugImageIconOptions | null): this {
+		if (!icon) {
+			if (this._icon) {
+				this.remove(this._icon)
+				this._icon.destroy()
+				this._icon = null
+			}
+			this._iconOptions = null
+			this.refreshContentLayout()
+			return this
+		}
+
+		if (!this._icon) {
+			this._icon = this.scene.add.image(0, 0, icon.key, icon.frame)
+			this._icon.setOrigin(0.5, 0.5)
+			// Insert above bg, below label/hitzone.
+			this.addAt(this._icon, 2)
+		} else {
+			this._icon.setTexture(icon.key, icon.frame)
+		}
+
+		this._iconOptions = icon
+		this.refreshContentLayout()
 		this.applyVisualState()
 		return this
 	}
@@ -184,7 +227,7 @@ export class DebugButton extends Phaser.GameObjects.Container {
 		this._height = height
 		this.setSize(width, height)
 		this._hitZone.setSize(width, height)
-		this._label.setWordWrapWidth(width - 20)
+		this.refreshContentLayout()
 		this.applyVisualState()
 		return this
 	}
@@ -206,7 +249,7 @@ export class DebugButton extends Phaser.GameObjects.Container {
 		if (options.outlineColor && options.outlineThickness !== undefined) {
 			this.setOutline(options.outlineColor, options.outlineThickness, options.outlineHoverColor)
 		}
-		if (options.text) this.setText(options.text)
+		if (options.text !== undefined) this.setText(options.text)
 		if (options.textColor) this.setTextColor(options.textColor, options.textHoverColor)
 		if (options.shadowEnabled !== undefined) this.setShadowEnabled(options.shadowEnabled)
 		return this
@@ -223,7 +266,51 @@ export class DebugButton extends Phaser.GameObjects.Container {
 		return this._label
 	}
 
+	getIcon(): Phaser.GameObjects.Image | null {
+		return this._icon
+	}
+
 	// -- Internal --
+
+	private refreshContentLayout(): void {
+		const hasText = this._label.text.length > 0
+		this._label.setVisible(hasText)
+
+		const icon = this._icon
+		const iconOpt = this._iconOptions
+
+		const iconW = icon ? icon.displayWidth : 0
+		const gap = iconOpt?.gap ?? 8
+		const contentPadX = 20
+
+		const wrapW = Math.max(0, this._width - contentPadX - (iconW > 0 ? iconW + (hasText ? gap : 0) : 0))
+		this._label.setWordWrapWidth(wrapW)
+
+		const labelW = hasText ? this._label.width : 0
+		const groupW = iconW + labelW + (iconW > 0 && labelW > 0 ? gap : 0)
+
+		if (!iconW && labelW) {
+			this._label.setPosition(0, 0)
+			return
+		}
+
+		if (iconW && !labelW) {
+			icon!.setPosition(0, 0)
+			return
+		}
+
+		if (!iconW && !labelW) return
+
+		const startX = -groupW / 2
+		const side = iconOpt?.side ?? "left"
+		if (side === "left") {
+			icon!.setPosition(startX + iconW / 2, 0)
+			this._label.setPosition(startX + iconW + gap + labelW / 2, 0)
+		} else {
+			this._label.setPosition(startX + labelW / 2, 0)
+			icon!.setPosition(startX + labelW + gap + iconW / 2, 0)
+		}
+	}
 
 	private setupInteraction(): void {
 		this._hitZone.on("pointerover", () => {
@@ -281,6 +368,19 @@ export class DebugButton extends Phaser.GameObjects.Container {
 		const tc = hexToColorAlpha(txHex)
 		this._label.setColor(`#${tc.color.toString(16).padStart(6, "0")}`)
 		this._label.setAlpha(tc.alpha)
+
+		if (this._icon) {
+			const iconOpt = this._iconOptions
+			const iconHex =
+				state === "hover"
+					? iconOpt?.hoverTint ?? txHex
+					: state === "disabled"
+						? iconOpt?.disabledTint ?? txHex
+						: iconOpt?.tint ?? txHex
+			const ic = hexToColorAlpha(iconHex)
+			this._icon.setTint(ic.color)
+			this._icon.setAlpha(ic.alpha * (iconOpt?.alpha ?? 1))
+		}
 	}
 
 	private redraw(bgHex: string, outlineHex: string): void {

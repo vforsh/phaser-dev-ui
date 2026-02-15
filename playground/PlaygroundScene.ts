@@ -21,8 +21,8 @@ import {
 import { createAppController } from "./AppController.js"
 
 import type { DebugProgressBar } from "../src/DebugProgressBar.js"
+import type { DebugImageIconOptions } from "../src/index.js"
 
-const CONTENT_Y = 600
 const PAGINATOR_Y_OFFSET = 120
 const PANEL_WIDTH = 340
 const PANEL_HEIGHT = 400
@@ -39,9 +39,19 @@ export class PlaygroundScene extends Phaser.Scene {
 		super({ key: "PlaygroundScene" })
 	}
 
+	preload(): void {
+		// Lucide icons rendered to PNGs via `icns` (playground-only assets).
+		this.load.image("icon-settings", "icons/settings.png")
+		this.load.image("icon-check", "icons/check.png")
+		this.load.image("icon-x", "icons/x.png")
+		this.load.image("icon-info", "icons/info.png")
+		this.load.image("icon-triangle-alert", "icons/triangle-alert.png")
+	}
+
 	create(): void {
 		const appctl = createAppController(this.game)
 		const { width, height } = this.scale
+		const contentY = height / 2
 
 		// ── Title ──
 		const title = createDebugLabel(this, {
@@ -53,7 +63,7 @@ export class PlaygroundScene extends Phaser.Scene {
 		appctl.registerNode("title", title)
 
 		// ── Page 1: Buttons ──
-		const page1 = this.add.container(width / 2, CONTENT_Y)
+		const page1 = this.add.container(width / 2, contentY)
 		const panel = createDebugPanel(this, {
 			width: PANEL_WIDTH,
 			height: PANEL_HEIGHT,
@@ -134,7 +144,7 @@ export class PlaygroundScene extends Phaser.Scene {
 		page1.add(panel)
 
 		// ── Page 2: Switch + Progress ──
-		const page2 = this.add.container(width / 2, CONTENT_Y)
+		const page2 = this.add.container(width / 2, contentY)
 		const centerPanel = createDebugPanel(this, {
 			width: PANEL_WIDTH,
 			height: PANEL_HEIGHT,
@@ -243,7 +253,7 @@ export class PlaygroundScene extends Phaser.Scene {
 		page2.add(centerPanel)
 
 		// ── Page 3: Labels & Layout ──
-		const page3 = this.add.container(width / 2, CONTENT_Y)
+		const page3 = this.add.container(width / 2, contentY)
 		const rightPanel = createDebugPanel(this, {
 			width: PANEL_WIDTH,
 			height: PANEL_HEIGHT,
@@ -331,7 +341,7 @@ export class PlaygroundScene extends Phaser.Scene {
 		page3.add(rightPanel)
 
 		// ── Page 4: Scroll Container ──
-		const page4 = this.add.container(width / 2, CONTENT_Y)
+		const page4 = this.add.container(width / 2, contentY)
 		const scrollPanel = createDebugPanel(this, {
 			width: PANEL_WIDTH,
 			height: PANEL_HEIGHT,
@@ -428,7 +438,243 @@ export class PlaygroundScene extends Phaser.Scene {
 
 		page4.add(scrollPanel)
 
-		this._pages = [page1, page2, page3, page4]
+		// ── Page 5: Icons ──
+		const page5 = this.add.container(width / 2, contentY)
+		const ICON_PANEL_WIDTH = 1040
+		const ICON_PANEL_HEIGHT = 900
+		const ICON_TITLE_Y = -ICON_PANEL_HEIGHT / 2 + 56
+		const iconPanel = createDebugPanel(this, {
+			width: ICON_PANEL_WIDTH,
+			height: ICON_PANEL_HEIGHT,
+			cornerRadius: 12,
+			position: { x: 0, y: 0 },
+			blockInputEvents: true,
+		})
+		appctl.registerNode("icon-panel", iconPanel)
+
+		const iconTitle = createDebugLabel(this, {
+			text: "Text + Icon Combos",
+			fontSize: 20,
+			isBold: true,
+			position: { x: 0, y: ICON_TITLE_Y },
+		})
+		iconPanel.add(iconTitle)
+
+		const buttonsLabel = createDebugLabel(this, {
+			text: "Buttons",
+			fontSize: 14,
+			color: "#999999",
+			position: { x: 0, y: ICON_TITLE_Y + 38 },
+		})
+		iconPanel.add(buttonsLabel)
+
+		const iconBtnGrid = createGridContainer(this, {
+			columns: 4,
+			cellWidth: 240,
+			cellHeight: 96,
+			spacingX: 16,
+			spacingY: 14,
+		})
+
+		const mkBtn = (cfg: { text: string; icon?: DebugImageIconOptions; enabled?: boolean }) =>
+			createDebugButton(this, {
+				text: cfg.text,
+				icon: cfg.icon,
+				width: 200,
+				height: 64,
+				fontSize: 18,
+				enabled: cfg.enabled ?? true,
+				onClick: (b) => console.log("[icons] clicked:", b.getLabel().text),
+			})
+
+		const btnText = mkBtn({ text: "Text" })
+		const btnLeft = mkBtn({
+			text: "Left",
+			icon: { key: "icon-settings", side: "left", gap: 10 },
+		})
+		const btnRight = mkBtn({
+			text: "Right",
+			icon: { key: "icon-info", side: "right", gap: 10 },
+		})
+		const btnIconOnly = mkBtn({
+			text: "",
+			icon: { key: "icon-check", side: "left" },
+		}).setButtonSize(86, 64)
+
+		const btnTextDisabled = mkBtn({ text: "Text", enabled: false })
+		const btnLeftDisabled = mkBtn({
+			text: "Left",
+			enabled: false,
+			icon: { key: "icon-settings", side: "left", gap: 10 },
+		})
+		const btnRightDisabled = mkBtn({
+			text: "Right",
+			enabled: false,
+			icon: { key: "icon-info", side: "right", gap: 10 },
+		})
+		const btnIconOnlyDisabled = mkBtn({
+			text: "",
+			enabled: false,
+			icon: { key: "icon-x", side: "left" },
+		}).setButtonSize(86, 64)
+
+		const btnRound = createDebugButton(this, {
+			text: "",
+			width: 64,
+			height: 64,
+			cornerRadius: 32,
+			icon: { key: "icon-settings" },
+			onClick: () => console.log("[icons] round button clicked"),
+		}).setTextColor("#ffffff", "#ffffff")
+
+		const btnRoundDisabled = createDebugButton(this, {
+			text: "",
+			width: 64,
+			height: 64,
+			cornerRadius: 32,
+			enabled: false,
+			icon: { key: "icon-x" },
+		}).setTextColor("#ffffff", "#ffffff")
+
+		const btnRoundHoverTint = createDebugButton(this, {
+			text: "",
+			width: 64,
+			height: 64,
+			cornerRadius: 32,
+			icon: { key: "icon-info", hoverTint: "#4ade80" },
+			onClick: () => console.log("[icons] round hoverTint clicked"),
+		}).setTextColor("#ffffff", "#ffffff")
+
+		const btnRoundAlt = createDebugButton(this, {
+			text: "",
+			width: 64,
+			height: 64,
+			cornerRadius: 32,
+			icon: { key: "icon-check" },
+			onClick: () => console.log("[icons] round alt clicked"),
+		}).setTextColor("#ffffff", "#ffffff")
+
+		iconBtnGrid.addItems([
+			btnText,
+			btnLeft,
+			btnRight,
+			btnIconOnly,
+			btnTextDisabled,
+			btnLeftDisabled,
+			btnRightDisabled,
+			btnIconOnlyDisabled,
+			btnRound,
+			btnRoundDisabled,
+			btnRoundHoverTint,
+			btnRoundAlt,
+		])
+		iconBtnGrid.layout()
+		const iconBtnGridW = iconBtnGrid.getContentWidth()
+		iconBtnGrid.setPosition(-iconBtnGridW / 2, ICON_TITLE_Y + 110)
+		iconPanel.add(iconBtnGrid)
+
+		const iconBadgesLabel = createDebugLabel(this, {
+			text: "Badges",
+			fontSize: 14,
+			color: "#999999",
+			position: { x: 0, y: ICON_TITLE_Y + 440 },
+		})
+		iconPanel.add(iconBadgesLabel)
+
+		const badgeGrid = createGridContainer(this, {
+			columns: 4,
+			cellWidth: 240,
+			cellHeight: 96,
+			spacingX: 16,
+			spacingY: 14,
+		})
+
+		const badgeText = createDebugBadge(this, {
+			text: "Text",
+			bgColor: "#333333",
+			fontSize: 18,
+			paddingX: 12,
+			paddingY: 8,
+			cornerRadius: 14,
+		})
+		const badgeLeft = createDebugBadge(this, {
+			text: "Left",
+			bgColor: "#333333",
+			fontSize: 18,
+			paddingX: 12,
+			paddingY: 8,
+			cornerRadius: 14,
+			icon: { key: "icon-settings", side: "left", gap: 10 },
+		})
+		const badgeRight = createDebugBadge(this, {
+			text: "Right",
+			bgColor: "#333333",
+			fontSize: 18,
+			paddingX: 12,
+			paddingY: 8,
+			cornerRadius: 14,
+			icon: { key: "icon-info", side: "right", gap: 10 },
+		})
+		const badgeIconOnly = createDebugBadge(this, {
+			text: "",
+			bgColor: "#333333",
+			paddingX: 12,
+			paddingY: 8,
+			cornerRadius: 14,
+			icon: { key: "icon-triangle-alert", side: "left" },
+		})
+
+		const badgeRound = createDebugBadge(this, {
+			text: "",
+			bgColor: "#333333",
+			height: 50,
+			minWidth: 50,
+			paddingX: 9,
+			paddingY: 8,
+			cornerRadius: 30,
+			icon: { key: "icon-settings" },
+		})
+
+		const badgeRoundTint = createDebugBadge(this, {
+			text: "",
+			bgColor: "#333333",
+			height: 50,
+			minWidth: 50,
+			paddingX: 9,
+			paddingY: 8,
+			cornerRadius: 30,
+			icon: { key: "icon-info", tint: "#4ade80" },
+		})
+
+		const badgePill = createDebugBadge(this, {
+			text: "Pill",
+			bgColor: "#333333",
+			fontSize: 18,
+			paddingX: 14,
+			paddingY: 8,
+			cornerRadius: 999,
+			icon: { key: "icon-check", side: "left", gap: 10 },
+		})
+
+		const badgePillRight = createDebugBadge(this, {
+			text: "Pill",
+			bgColor: "#333333",
+			fontSize: 18,
+			paddingX: 14,
+			paddingY: 8,
+			cornerRadius: 999,
+			icon: { key: "icon-x", side: "right", gap: 10 },
+		})
+
+		badgeGrid.addItems([badgeText, badgeLeft, badgeRight, badgeIconOnly, badgeRound, badgeRoundTint, badgePill, badgePillRight])
+		badgeGrid.layout()
+		const badgeGridW = badgeGrid.getContentWidth()
+		badgeGrid.setPosition(-badgeGridW / 2, ICON_TITLE_Y + 490)
+		iconPanel.add(badgeGrid)
+
+		page5.add(iconPanel)
+
+		this._pages = [page1, page2, page3, page4, page5]
 		const startPage = Math.min(
 			Math.max(0, (globalThis as any).__PLAYGROUND_START_PAGE ?? 0),
 			this._pages.length - 1,

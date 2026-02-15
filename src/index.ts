@@ -1,5 +1,5 @@
 // Types
-export type { HexColor, Position, Size, ClickHandler } from "./types.js"
+export type { HexColor, Position, Size, ClickHandler, DebugImageIconOptions, IconSide } from "./types.js"
 
 // Utilities
 export { parseHex, toColorInt, dimHex, hexToColorAlpha, estimateTextWidth, getDevicePixelRatio } from "./utils.js"
@@ -40,4 +40,3 @@ export type { CreateGridContainerOptions } from "./DebugGridContainer.js"
 
 export { DebugScrollContainer, createDebugScrollContainer } from "./DebugScrollContainer.js"
 export type { CreateDebugScrollContainerOptions, DebugScrollContainerStyleOptions } from "./DebugScrollContainer.js"
-

@@ -34,7 +34,7 @@ argus eval-until pg "document.querySelector('canvas')" --total-timeout 10s
 
 ## Page Navigation
 
-The playground has 5 pages. Navigate via `_goToPage(index)` on the scene (0-indexed):
+The playground has 6 pages. Navigate via `_goToPage(index)` on the scene (0-indexed):
 
 ```bash
 # Go to page 4 (Scroll Container)
@@ -53,6 +53,7 @@ Pages:
 | 2     | Labels & Layout    |
 | 3     | Scroll Container   |
 | 4     | Text + Icon Combos |
+| 5     | Panel Styles       |
 
 ---
 

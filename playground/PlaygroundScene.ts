@@ -24,9 +24,9 @@ import type { DebugProgressBar } from "../src/DebugProgressBar.js"
 import type { DebugImageIconOptions } from "../src/index.js"
 
 const PAGINATOR_Y_OFFSET = 120
-const PANEL_WIDTH = 340
-const PANEL_HEIGHT = 400
-const PANEL_TITLE_Y = -160
+const PANEL_WIDTH = 700
+const PANEL_HEIGHT = 800
+const PANEL_TITLE_Y = -360
 
 export class PlaygroundScene extends Phaser.Scene {
 	private _progressBar!: DebugProgressBar
@@ -83,8 +83,8 @@ export class PlaygroundScene extends Phaser.Scene {
 
 		const normalBtn = createDebugButton(this, {
 			text: "Normal",
-			width: 140,
-			height: 50,
+			width: 200,
+			height: 64,
 			onClick: (btn) => {
 				console.log("Normal button clicked!")
 				btn.setText("Clicked!")
@@ -95,24 +95,24 @@ export class PlaygroundScene extends Phaser.Scene {
 
 		const styledBtn = createDebugButton(this, {
 			text: "Styled",
-			width: 140,
-			height: 50,
+			width: 200,
+			height: 64,
 		})
 		styledBtn.setBgColor("#1a3a5c", "#2a5a8c").setTextColor("#66aaff", "#99ccff")
 		appctl.registerNode("btn-styled", styledBtn)
 
 		const disabledBtn = createDebugButton(this, {
 			text: "Disabled",
-			width: 140,
-			height: 50,
+			width: 200,
+			height: 64,
 			enabled: false,
 		})
 		appctl.registerNode("btn-disabled", disabledBtn)
 
 		const toggleBtn = createDebugButton(this, {
 			text: "Toggle ↑",
-			width: 140,
-			height: 50,
+			width: 200,
+			height: 64,
 			onClick: () => {
 				const newState = !disabledBtn.isEnabled()
 				disabledBtn.setEnabled(newState)
@@ -123,24 +123,70 @@ export class PlaygroundScene extends Phaser.Scene {
 
 		const btnGrid = createGridContainer(this, {
 			columns: 2,
-			cellWidth: 150,
-			cellHeight: 60,
-			spacingX: 10,
-			spacingY: 12,
+			cellWidth: 230,
+			cellHeight: 84,
+			spacingX: 24,
+			spacingY: 24,
 		})
 		btnGrid.addItems([normalBtn, styledBtn, disabledBtn, toggleBtn])
 		btnGrid.layout()
 		const gridW = btnGrid.getContentWidth()
-		btnGrid.setPosition(-gridW / 2, -95)
+		btnGrid.setPosition(-gridW / 2, -220)
 		panel.add(btnGrid)
 
 		normalBtn.add(
 			createDebugBadge(this, {
 				text: "NEW",
 				bgColor: "#cc3333",
-				position: { x: 55, y: -20 },
+				position: { x: 85, y: -26 },
 			}),
 		)
+
+		const sizesLabel = createDebugLabel(this, {
+			text: "Sizes & Styles",
+			fontSize: 16,
+			color: "#999999",
+			position: { x: 0, y: 50 },
+		})
+		panel.add(sizesLabel)
+
+		const sizesRow = createRowContainer(this, { spacingX: 16 })
+		const flatBtn = createDebugButton(this, {
+			text: "Flat",
+			width: 130,
+			height: 50,
+			fontSize: 15,
+			stroke: false,
+			shadow: false,
+			onClick: () => console.log("Flat clicked"),
+		})
+		flatBtn.setBgColor("#1a1a2e", "#2a2a4e")
+		appctl.registerNode("btn-flat", flatBtn)
+
+		const smallBtn = createDebugButton(this, {
+			text: "XS",
+			width: 60,
+			height: 38,
+			fontSize: 13,
+			onClick: () => console.log("Small clicked"),
+		})
+		appctl.registerNode("btn-small", smallBtn)
+
+		const wideBtn = createDebugButton(this, {
+			text: "Wide Button",
+			width: 220,
+			height: 50,
+			fontSize: 15,
+			onClick: () => console.log("Wide clicked"),
+		})
+		appctl.registerNode("btn-wide", wideBtn)
+
+		sizesRow.addItems([flatBtn, smallBtn, wideBtn])
+		sizesRow.layout()
+		const sizesRowW = sizesRow.getContentWidth()
+		sizesRow.setPosition(-sizesRowW / 2, 130)
+		panel.add(sizesRow)
+
 		page1.add(panel)
 
 		// ── Page 2: Switch + Progress ──
@@ -168,11 +214,11 @@ export class PlaygroundScene extends Phaser.Scene {
 				{ key: "high", value: "High Quality" },
 				{ key: "ultra", value: "Ultra Quality" },
 			],
-			size: { width: 280, height: 44 },
+			size: { width: 480, height: 50 },
 			bgColor: "#333333",
 			textColor: "#ffffff",
 			arrowColor: "#ffffff",
-			position: { x: 0, y: -95 },
+			position: { x: 0, y: -220 },
 		})
 		qualitySwitch.onOptionChanged((opt, idx) => {
 			console.log(`Quality → ${opt.key} (index ${idx})`)
@@ -186,13 +232,13 @@ export class PlaygroundScene extends Phaser.Scene {
 				{ key: "light", value: "Light Theme" },
 				{ key: "solarized", value: "Solarized" },
 			],
-			size: { width: 280, height: 44 },
+			size: { width: 480, height: 50 },
 			bgColor: "#1a1a2e",
 			textColor: "#e0e0e0",
 			arrowColor: "#7070ff",
 			strokeColor: "#3030aa",
 			strokeThickness: 2,
-			position: { x: 0, y: -40 },
+			position: { x: 0, y: -120 },
 		})
 		centerPanel.add(themeSwitch)
 		appctl.registerNode("switch-theme", themeSwitch)
@@ -202,12 +248,12 @@ export class PlaygroundScene extends Phaser.Scene {
 				{ key: "on", value: "Enabled" },
 				{ key: "off", value: "Disabled" },
 			],
-			size: { width: 280, height: 44 },
+			size: { width: 480, height: 50 },
 			bgColor: "#333333",
 			textColor: "#ffffff",
 			arrowColor: "#ffffff",
 			enabled: false,
-			position: { x: 0, y: 15 },
+			position: { x: 0, y: -20 },
 		})
 		centerPanel.add(disabledSwitch)
 		appctl.registerNode("switch-disabled", disabledSwitch)
@@ -216,37 +262,37 @@ export class PlaygroundScene extends Phaser.Scene {
 			text: "Progress Bars",
 			fontSize: 16,
 			color: "#999999",
-			position: { x: 0, y: 72 },
+			position: { x: 0, y: 80 },
 		})
 		centerPanel.add(progressLabel)
 
 		this._progressBar = createDebugProgressBar(this, {
-			width: 280,
-			height: 12,
+			width: 480,
+			height: 16,
 			fillColor: "#4caf50",
-			position: { x: 0, y: 100 },
+			position: { x: 0, y: 130 },
 			value: 0.0,
 		})
 		centerPanel.add(this._progressBar)
 		appctl.registerNode("progress-animated", this._progressBar)
 
 		const halfBar = createDebugProgressBar(this, {
-			width: 280,
-			height: 8,
+			width: 480,
+			height: 10,
 			fillColor: "#2196f3",
 			trackColor: "#1a1a3a",
 			value: 0.5,
-			position: { x: 0, y: 126 },
+			position: { x: 0, y: 185 },
 		})
 		centerPanel.add(halfBar)
 		appctl.registerNode("progress-half", halfBar)
 
 		const fullBar = createDebugProgressBar(this, {
-			width: 280,
-			height: 8,
+			width: 480,
+			height: 10,
 			fillColor: "#ff9800",
 			value: 1.0,
-			position: { x: 0, y: 146 },
+			position: { x: 0, y: 230 },
 		})
 		centerPanel.add(fullBar)
 		appctl.registerNode("progress-full", fullBar)
@@ -270,7 +316,7 @@ export class PlaygroundScene extends Phaser.Scene {
 		})
 		rightPanel.add(rightTitle)
 
-		const labelsColumn = createColumnContainer(this, { spacingY: 8 })
+		const labelsColumn = createColumnContainer(this, { spacingY: 16 })
 		const labels = [
 			createDebugLabel(this, { text: "Default Label", fontSize: 16 }),
 			createDebugLabel(this, { text: "Bold Label", fontSize: 16, isBold: true }),
@@ -289,18 +335,18 @@ export class PlaygroundScene extends Phaser.Scene {
 		]
 		labelsColumn.addItems(labels)
 		labelsColumn.layout()
-		labelsColumn.setPosition(0, -98)
+		labelsColumn.setPosition(0, -210)
 		rightPanel.add(labelsColumn)
 
 		const badgesLabel = createDebugLabel(this, {
 			text: "Badges",
 			fontSize: 16,
 			color: "#999999",
-			position: { x: 0, y: 14 },
+			position: { x: 0, y: 20 },
 		})
 		rightPanel.add(badgesLabel)
 
-		const badgeRow = createRowContainer(this, { spacingX: 10 })
+		const badgeRow = createRowContainer(this, { spacingX: 14 })
 		const badges = [
 			createDebugBadge(this, { text: "NEW", bgColor: "#cc3333" }),
 			createDebugBadge(this, { text: "WIP", bgColor: "#cc8800" }),
@@ -311,32 +357,32 @@ export class PlaygroundScene extends Phaser.Scene {
 		badgeRow.addItems(badges)
 		badgeRow.layout()
 		const rowW = badgeRow.getContentWidth()
-		badgeRow.setPosition(-rowW / 2, 42)
+		badgeRow.setPosition(-rowW / 2, 72)
 		rightPanel.add(badgeRow)
 
 		const rowLabel = createDebugLabel(this, {
 			text: "Row Container",
 			fontSize: 16,
 			color: "#999999",
-			position: { x: 0, y: 88 },
+			position: { x: 0, y: 170 },
 		})
 		rightPanel.add(rowLabel)
 
-		const demoRow = createRowContainer(this, { spacingX: 8 })
+		const demoRow = createRowContainer(this, { spacingX: 12 })
 		for (let i = 0; i < 3; i++) {
 			demoRow.addItem(
 				createDebugButton(this, {
 					text: `R${i + 1}`,
-					width: 80,
-					height: 36,
-					fontSize: 14,
+					width: 110,
+					height: 44,
+					fontSize: 16,
 					onClick: () => console.log(`R${i + 1} clicked`),
 				}),
 			)
 		}
 		demoRow.layout()
 		const demoRowW = demoRow.getContentWidth()
-		demoRow.setPosition(-demoRowW / 2, 126)
+		demoRow.setPosition(-demoRowW / 2, 230)
 		rightPanel.add(demoRow)
 		page3.add(rightPanel)
 
@@ -363,14 +409,14 @@ export class PlaygroundScene extends Phaser.Scene {
 			text: "Mouse wheel over list or use controls",
 			fontSize: 13,
 			color: "#888888",
-			position: { x: 0, y: -132 },
+			position: { x: 0, y: -300 },
 		})
 		scrollPanel.add(scrollHint)
 
 		const scrollView = createDebugScrollContainer(this, {
-			width: 280,
-			height: 210,
-			position: { x: 0, y: -12 },
+			width: 520,
+			height: 420,
+			position: { x: 0, y: -40 },
 			bgColor: "#0a0a0a",
 			strokeColor: "#3f3f3f",
 			strokeThickness: 2,
@@ -388,7 +434,7 @@ export class PlaygroundScene extends Phaser.Scene {
 		appctl.registerNode("scroll-main", scrollView)
 		scrollPanel.add(scrollView)
 
-		const cx = 116 // center x for 216-wide items in 260-wide viewport
+		const cx = 218 // center x for 420-wide items in 500-wide viewport
 		let cursorY = 0
 		const gap = 10
 		const scrollItems: Phaser.GameObjects.GameObject[] = []
@@ -408,13 +454,13 @@ export class PlaygroundScene extends Phaser.Scene {
 		for (let i = 0; i < 4; i++) {
 			const btn = createDebugButton(this, {
 				text: `Action ${i + 1}`,
-				width: 216,
-				height: 34,
+				width: 420,
+				height: 40,
 				fontSize: 14,
 				onClick: () => console.log(`Scroll item clicked: ${i + 1}`),
 			})
-			btn.setPosition(cx, cursorY + 17)
-			cursorY += 34 + gap
+			btn.setPosition(cx, cursorY + 20)
+			cursorY += 40 + gap
 			scrollItems.push(btn)
 			appctl.registerNode(`scroll-item-${i + 1}`, btn)
 		}
@@ -446,7 +492,7 @@ export class PlaygroundScene extends Phaser.Scene {
 
 		// Progress bars
 		const scrollProgress1 = createDebugProgressBar(this, {
-			width: 216,
+			width: 420,
 			height: 10,
 			fillColor: "#4caf50",
 			value: 0.75,
@@ -456,7 +502,7 @@ export class PlaygroundScene extends Phaser.Scene {
 		scrollItems.push(scrollProgress1)
 
 		const scrollProgress2 = createDebugProgressBar(this, {
-			width: 216,
+			width: 420,
 			height: 10,
 			fillColor: "#2196f3",
 			value: 0.4,
@@ -468,7 +514,7 @@ export class PlaygroundScene extends Phaser.Scene {
 		// Tall button
 		const tallBtn = createDebugButton(this, {
 			text: "Tall Button (64px)",
-			width: 216,
+			width: 420,
 			height: 64,
 			fontSize: 16,
 			onClick: () => console.log("Tall button clicked"),
@@ -483,13 +529,13 @@ export class PlaygroundScene extends Phaser.Scene {
 		for (let i = 5; i <= 12; i++) {
 			const btn = createDebugButton(this, {
 				text: `Item ${i}`,
-				width: 216,
-				height: 34,
+				width: 420,
+				height: 40,
 				fontSize: 14,
 				onClick: () => console.log(`Scroll item clicked: ${i}`),
 			})
-			btn.setPosition(cx, cursorY + 17)
-			cursorY += 34 + gap
+			btn.setPosition(cx, cursorY + 20)
+			cursorY += 40 + gap
 			scrollItems.push(btn)
 			appctl.registerNode(`scroll-item-${i}`, btn)
 		}
@@ -506,32 +552,32 @@ export class PlaygroundScene extends Phaser.Scene {
 		scrollView.addItems(scrollItems)
 		scrollView.layout()
 
-		const controlsRow = createRowContainer(this, { spacingX: 12 })
+		const controlsRow = createRowContainer(this, { spacingX: 16 })
 		const toTopBtn = createDebugButton(this, {
 			text: "Top",
-			width: 90,
-			height: 36,
-			fontSize: 14,
+			width: 120,
+			height: 44,
+			fontSize: 16,
 			onClick: () => scrollView.scrollToTop(),
 		})
 		const downBtn = createDebugButton(this, {
 			text: "+80",
-			width: 90,
-			height: 36,
-			fontSize: 14,
+			width: 120,
+			height: 44,
+			fontSize: 16,
 			onClick: () => scrollView.scrollBy(80),
 		})
 		const toBottomBtn = createDebugButton(this, {
 			text: "Bottom",
-			width: 90,
-			height: 36,
-			fontSize: 14,
+			width: 120,
+			height: 44,
+			fontSize: 16,
 			onClick: () => scrollView.scrollToBottom(),
 		})
 		controlsRow.addItems([toTopBtn, downBtn, toBottomBtn])
 		controlsRow.layout()
 		const controlsW = controlsRow.getContentWidth()
-		controlsRow.setPosition(-controlsW / 2, 132)
+		controlsRow.setPosition(-controlsW / 2, 260)
 		scrollPanel.add(controlsRow)
 		appctl.registerNode("scroll-top", toTopBtn)
 		appctl.registerNode("scroll-down", downBtn)
@@ -775,7 +821,88 @@ export class PlaygroundScene extends Phaser.Scene {
 
 		page5.add(iconPanel)
 
-		this._pages = [page1, page2, page3, page4, page5]
+		// ── Page 6: Panel Styles ──
+		const page6 = this.add.container(width / 2, contentY)
+		const panelStylesTitle = createDebugLabel(this, {
+			text: "Panel Styles",
+			fontSize: 20,
+			isBold: true,
+			position: { x: 0, y: PANEL_TITLE_Y },
+		})
+
+		const panelStyles: Array<{
+			label: string
+			opts: Parameters<typeof createDebugPanel>[1]
+			post?: (p: ReturnType<typeof createDebugPanel>) => void
+		}> = [
+			{ label: "Default", opts: {} },
+			{
+				label: "Blue",
+				opts: { fillColor: "#0d1b2a", strokeColor: "#4488cc" },
+			},
+			{
+				label: "No Shadow",
+				opts: {},
+				post: (p) => p.setShadowVisible(false),
+			},
+			{
+				label: "Rounded",
+				opts: { cornerRadius: 28 },
+			},
+			{
+				label: "Thick",
+				opts: { strokeColor: "#cc8800", strokeThickness: 8 },
+			},
+			{
+				label: "Subtle",
+				opts: {
+					fillColor: "#141414",
+					strokeColor: "#2a2a2a",
+					strokeThickness: 1,
+				},
+				post: (p) => p.setShadowVisible(false),
+			},
+		]
+
+		const miniW = 260
+		const miniH = 150
+		const colGap = 30
+		const rowGap = 24
+		const cols = 2
+		const gridOffsetY = -210
+
+		for (let i = 0; i < panelStyles.length; i++) {
+			const col = i % cols
+			const row = Math.floor(i / cols)
+			const x = (col - 0.5) * (miniW + colGap)
+			const y = gridOffsetY + row * (miniH + rowGap)
+
+			const { label, opts, post } = panelStyles[i]
+			const mini = createDebugPanel(this, {
+				width: miniW,
+				height: miniH,
+				cornerRadius: opts.cornerRadius ?? 10,
+				fillColor: opts.fillColor,
+				strokeColor: opts.strokeColor,
+				strokeThickness: opts.strokeThickness,
+				position: { x, y },
+			})
+			post?.(mini)
+
+			const miniLabel = createDebugLabel(this, {
+				text: label,
+				fontSize: 16,
+				color: "#888888",
+				position: { x: 0, y: 0 },
+			})
+			mini.add(miniLabel)
+			page6.add(mini)
+			appctl.registerNode(`panel-style-${label.toLowerCase().replace(/\s/g, "-")}`, mini)
+		}
+
+		page6.add(panelStylesTitle)
+
+		this._pages = [page1, page2, page3, page4, page5, page6]
 		const startPage = Math.min(
 			Math.max(0, (globalThis as any).__PLAYGROUND_START_PAGE ?? 0),
 			this._pages.length - 1,
@@ -799,6 +926,7 @@ export class PlaygroundScene extends Phaser.Scene {
 			fontFamily: "Verdana",
 			fontSize: 18,
 			color: "#a3a3a3",
+			resolution: window.devicePixelRatio ?? 1,
 		})
 		this._pageLabel.setOrigin(0.5)
 

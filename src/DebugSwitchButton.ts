@@ -31,6 +31,10 @@ export interface CreateDebugSwitchButtonOptions<K extends string | number = stri
 	arrowSize?: number
 	/** Arrow margin from edges (default: 10). */
 	arrowMargin?: number
+	/** Font size in px (default: 16). */
+	fontSize?: number
+	/** Font family (default: "Verdana"). */
+	fontFamily?: string
 	/** Enabled (default: true). */
 	enabled?: boolean
 	/** Position (optional). */
@@ -67,6 +71,8 @@ export class DebugSwitchButton<K extends string | number = string> extends Phase
 	private _arrowColor: HexColor
 	private _arrowSize: number
 	private _arrowMargin: number
+	private _fontSize: number
+	private _fontFamily: string
 
 	constructor(scene: Phaser.Scene, options: CreateDebugSwitchButtonOptions<K>) {
 		const {
@@ -81,6 +87,8 @@ export class DebugSwitchButton<K extends string | number = string> extends Phase
 			arrowColor = "#ffffff",
 			arrowSize,
 			arrowMargin = 10,
+			fontSize = 16,
+			fontFamily = "Verdana",
 			enabled = true,
 			position,
 		} = options
@@ -96,6 +104,8 @@ export class DebugSwitchButton<K extends string | number = string> extends Phase
 		this._arrowColor = arrowColor
 		this._arrowSize = arrowSize ?? Math.min(20, size.height * 0.5)
 		this._arrowMargin = arrowMargin
+		this._fontSize = fontSize
+		this._fontFamily = fontFamily
 		this._options = switchOptions
 		this._currentIndex = Math.max(0, Math.min(optionInitialIndex, switchOptions.length - 1))
 		this._optionsWrap = optionsWrap
@@ -108,8 +118,8 @@ export class DebugSwitchButton<K extends string | number = string> extends Phase
 		// Label
 		const tc = hexToColorAlpha(textColor)
 		this._label = scene.add.text(0, 0, "", {
-			fontFamily: "Verdana",
-			fontSize: "16px",
+			fontFamily: fontFamily,
+			fontSize: `${fontSize}px`,
 			fontStyle: "normal",
 			color: `#${tc.color.toString(16).padStart(6, "0")}`,
 			align: "center",
@@ -267,6 +277,18 @@ export class DebugSwitchButton<K extends string | number = string> extends Phase
 		return this
 	}
 
+	setFontSize(size: number): this {
+		this._fontSize = size
+		this._label.setFontSize(`${size}px`)
+		return this
+	}
+
+	setFontFamily(family: string): this {
+		this._fontFamily = family
+		this._label.setFontFamily(family)
+		return this
+	}
+
 	setStyle(options: {
 		size?: Size
 		bgColor?: HexColor
@@ -276,6 +298,8 @@ export class DebugSwitchButton<K extends string | number = string> extends Phase
 		arrowColor?: HexColor
 		arrowSize?: number
 		arrowMargin?: number
+		fontSize?: number
+		fontFamily?: string
 	}): this {
 		if (options.size) this.setSwitchSize(options.size.width, options.size.height)
 		if (options.bgColor) this._bgColor = options.bgColor
@@ -285,6 +309,8 @@ export class DebugSwitchButton<K extends string | number = string> extends Phase
 		if (options.arrowColor) this._arrowColor = options.arrowColor
 		if (options.arrowSize !== undefined) this._arrowSize = options.arrowSize
 		if (options.arrowMargin !== undefined) this._arrowMargin = options.arrowMargin
+		if (options.fontSize !== undefined) this.setFontSize(options.fontSize)
+		if (options.fontFamily) this.setFontFamily(options.fontFamily)
 		this.redraw()
 		return this
 	}

@@ -60,6 +60,8 @@ scripts/
   build.ts               Build script (rm dist + tsc)
 
 playground/              Dev playground (not in dist)
+docs/
+  playground-argus.md    Debugging/inspecting the playground with Argus CLI
 
 dist/                    Build output (git-ignored)
 ```
@@ -73,6 +75,25 @@ dist/                    Build output (git-ignored)
 - **Setup**: `createAppController(game)` installs on `window.appctl`.
 - **Test IDs**: `registerNode(testId, go)` to register nodes. Query scene graph, canvas bounds, snapshots, perf stats, screenshots.
 - **Automation**: `advanceFrames`, `emitClick`, `emitKeyDown` for E2E-style flows.
+
+---
+
+## Playground Debugging (Argus)
+
+Use the Argus CLI to inspect, screenshot, and automate the playground via CDP. Full guide: [`docs/playground-argus.md`](docs/playground-argus.md).
+
+```bash
+bun run playground                                    # start dev server (prints port)
+argus start --id pg --url localhost:<port>             # launch Chrome + watcher (background)
+argus eval-until pg "document.querySelector('canvas')" --total-timeout 10s
+argus eval pg "window.appctl.getScene('PlaygroundScene')._goToPage(3)"
+argus screenshot pg --out shot.png
+argus logs pg --levels error,warning
+```
+
+- `window.appctl` exposes `getNodeById`, `getSnapshot`, `emitKeyDown`, `emitClick`, `getPerfStats`, etc.
+- All registered primitives have test IDs — list with `window.appctl.getRegisteredTestIds()`.
+- Use `--no-page-indicator` flag for clean screenshots.
 
 ---
 

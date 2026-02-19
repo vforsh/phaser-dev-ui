@@ -3,6 +3,12 @@ export type { HexColor, Position, Size, ClickHandler, DebugImageIconOptions, Ico
 
 // Utilities
 export { parseHex, toColorInt, dimHex, hexToColorAlpha, estimateTextWidth, getDevicePixelRatio } from "./utils.js"
+export { bindDebugControl } from "./bindDebugControl.js"
+export type { BindDebugControlOptions, DebugControlAdapter, DebugControlBinding } from "./bindDebugControl.js"
+export { anchorToViewport, getSafeAreaInsets } from "./anchorToViewport.js"
+export type { AnchorToViewportOptions, SafeAreaInsets, SafeAreaOptions, ViewportAnchor, ViewportAnchorHandle } from "./anchorToViewport.js"
+export { layoutAuto } from "./layoutAuto.js"
+export type { LayoutAutoOptions, LayoutAutoScheduler, LayoutAutoTarget } from "./layoutAuto.js"
 
 // Panel
 export { DebugPanel, createDebugPanel } from "./DebugPanel.js"

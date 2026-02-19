@@ -1,6 +1,6 @@
 {
 	"name": "@vforsh/phaser-dev-ui",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Pure-code debug UI primitives for Phaser 3 games — panels, buttons, labels, badges, progress bars, switch buttons, and layout containers. No assets required.",
 	"type": "module",
 	"main": "dist/index.js",

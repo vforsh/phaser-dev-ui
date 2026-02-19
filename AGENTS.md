@@ -44,6 +44,9 @@ src/                     Library source (TypeScript)
   index.ts               Barrel re-exports
   types.ts               Shared types (Position, Size, HexColor, ClickHandler)
   utils.ts               Color parsing, text width estimation
+  bindDebugControl.ts    Two-way control ↔ model binding helper
+  anchorToViewport.ts    Viewport anchoring + safe-area utilities
+  layoutAuto.ts          Frame-batched dirty layout scheduler
   phaser-types.d.ts      Triple-slash reference for Phaser global types
   DebugPanel.ts           Rounded rect container with bg/stroke/shadow
   DebugLabel.ts           Text label with dark-theme defaults

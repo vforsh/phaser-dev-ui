@@ -17,6 +17,10 @@ import {
 	createRowContainer,
 	createColumnContainer,
 	createGridContainer,
+	bindDebugControl,
+	anchorToViewport,
+	getSafeAreaInsets,
+	layoutAuto,
 } from "../src/index.js"
 import { createAppController } from "./AppController.js"
 
@@ -902,7 +906,529 @@ export class PlaygroundScene extends Phaser.Scene {
 
 		page6.add(panelStylesTitle)
 
-		this._pages = [page1, page2, page3, page4, page5, page6]
+		// ── Page 7: Data Binding ──
+		const page7 = this.add.container(width / 2, contentY)
+		const bindingPanel = createDebugPanel(this, {
+			width: PANEL_WIDTH,
+			height: PANEL_HEIGHT,
+			cornerRadius: 12,
+			position: { x: 0, y: 0 },
+			blockInputEvents: true,
+		})
+		page7.add(bindingPanel)
+		appctl.registerNode("binding-panel", bindingPanel)
+
+		const bindingTitle = createDebugLabel(this, {
+			text: "bindDebugControl()",
+			fontSize: 20,
+			isBold: true,
+			position: { x: 0, y: PANEL_TITLE_Y },
+		})
+		bindingPanel.add(bindingTitle)
+
+		const bindingHint = createDebugLabel(this, {
+			text: "Two-way sync: model -> control (poll) and control -> model (events)",
+			fontSize: 13,
+			color: "#888888",
+			position: { x: 0, y: PANEL_TITLE_Y + 38 },
+		})
+		bindingPanel.add(bindingHint)
+
+		type QualityMode = "low" | "medium" | "high"
+		type ThemeMode = "dark" | "light" | "solarized"
+
+		const debugState: { settings: { quality: QualityMode } } = {
+			settings: { quality: "medium" },
+		}
+		let runtimeTheme: ThemeMode = "dark"
+
+		const bindingQualitySwitch = createDebugSwitchButton<QualityMode>(this, {
+			options: [
+				{ key: "low", value: "Low" },
+				{ key: "medium", value: "Medium" },
+				{ key: "high", value: "High" },
+			],
+			size: { width: 460, height: 52 },
+			bgColor: "#1d1d1d",
+			strokeColor: "#4a4a4a",
+			textColor: "#e5e5e5",
+			arrowColor: "#a3a3a3",
+			position: { x: 0, y: -210 },
+		})
+		bindingPanel.add(bindingQualitySwitch)
+		appctl.registerNode("binding-quality-switch", bindingQualitySwitch)
+
+		const qualityStateLabel = createDebugLabel(this, {
+			text: "",
+			fontSize: 14,
+			color: "#a3a3a3",
+			position: { x: 0, y: -168 },
+		})
+		const refreshQualityLabel = (): void => {
+			qualityStateLabel.setText(`state.settings.quality = ${debugState.settings.quality}`)
+		}
+		bindingPanel.add(qualityStateLabel)
+
+		bindDebugControl({
+			control: bindingQualitySwitch,
+			target: debugState as unknown as Record<string, unknown>,
+			path: "settings.quality",
+		})
+		bindingQualitySwitch.onOptionChanged(() => refreshQualityLabel())
+
+		const qualityControls = createRowContainer(this, { spacingX: 10 })
+		const qualitySetLowBtn = createDebugButton(this, {
+			text: "Model: low",
+			width: 140,
+			height: 42,
+			fontSize: 14,
+			onClick: () => {
+				debugState.settings.quality = "low"
+				refreshQualityLabel()
+			},
+		})
+		const qualitySetHighBtn = createDebugButton(this, {
+			text: "Model: high",
+			width: 140,
+			height: 42,
+			fontSize: 14,
+			onClick: () => {
+				debugState.settings.quality = "high"
+				refreshQualityLabel()
+			},
+		})
+		const qualityRandomBtn = createDebugButton(this, {
+			text: "Random",
+			width: 120,
+			height: 42,
+			fontSize: 14,
+			onClick: () => {
+				const modes: QualityMode[] = ["low", "medium", "high"]
+				debugState.settings.quality = modes[Math.floor(Math.random() * modes.length)] ?? "medium"
+				refreshQualityLabel()
+			},
+		})
+		qualityControls.addItems([qualitySetLowBtn, qualitySetHighBtn, qualityRandomBtn])
+		qualityControls.layout()
+		qualityControls.setPosition(-qualityControls.getContentWidth() / 2, -120)
+		bindingPanel.add(qualityControls)
+		appctl.registerNode("binding-quality-model-low", qualitySetLowBtn)
+		appctl.registerNode("binding-quality-model-high", qualitySetHighBtn)
+		appctl.registerNode("binding-quality-model-random", qualityRandomBtn)
+
+		const bindingThemeSwitch = createDebugSwitchButton<ThemeMode>(this, {
+			options: [
+				{ key: "dark", value: "Dark" },
+				{ key: "light", value: "Light" },
+				{ key: "solarized", value: "Solarized" },
+			],
+			size: { width: 460, height: 52 },
+			bgColor: "#1d1d1d",
+			strokeColor: "#4a4a4a",
+			textColor: "#e5e5e5",
+			arrowColor: "#a3a3a3",
+			position: { x: 0, y: 0 },
+		})
+		bindingPanel.add(bindingThemeSwitch)
+		appctl.registerNode("binding-theme-switch", bindingThemeSwitch)
+
+		const themeStateLabel = createDebugLabel(this, {
+			text: "",
+			fontSize: 14,
+			color: "#a3a3a3",
+			position: { x: 0, y: 42 },
+		})
+		const refreshThemeLabel = (): void => {
+			themeStateLabel.setText(`runtimeTheme = ${runtimeTheme}`)
+		}
+		bindingPanel.add(themeStateLabel)
+
+		bindDebugControl({
+			control: bindingThemeSwitch,
+			getValue: () => runtimeTheme,
+			setValue: (nextTheme) => {
+				runtimeTheme = nextTheme
+				refreshThemeLabel()
+			},
+		})
+
+		const themeControls = createRowContainer(this, { spacingX: 10 })
+		const themeSetDarkBtn = createDebugButton(this, {
+			text: "Theme: dark",
+			width: 140,
+			height: 42,
+			fontSize: 14,
+			onClick: () => {
+				runtimeTheme = "dark"
+				refreshThemeLabel()
+			},
+		})
+		const themeSetLightBtn = createDebugButton(this, {
+			text: "Theme: light",
+			width: 140,
+			height: 42,
+			fontSize: 14,
+			onClick: () => {
+				runtimeTheme = "light"
+				refreshThemeLabel()
+			},
+		})
+		const themeSetSolarizedBtn = createDebugButton(this, {
+			text: "Theme: solarized",
+			width: 160,
+			height: 42,
+			fontSize: 14,
+			onClick: () => {
+				runtimeTheme = "solarized"
+				refreshThemeLabel()
+			},
+		})
+		themeControls.addItems([themeSetDarkBtn, themeSetLightBtn, themeSetSolarizedBtn])
+		themeControls.layout()
+		themeControls.setPosition(-themeControls.getContentWidth() / 2, 94)
+		bindingPanel.add(themeControls)
+		appctl.registerNode("binding-theme-model-dark", themeSetDarkBtn)
+		appctl.registerNode("binding-theme-model-light", themeSetLightBtn)
+		appctl.registerNode("binding-theme-model-solarized", themeSetSolarizedBtn)
+
+		refreshQualityLabel()
+		refreshThemeLabel()
+
+		// ── Page 8: Viewport Anchors ──
+		const page8 = this.add.container(0, 0)
+		const anchorCenterPanel = createDebugPanel(this, {
+			width: 680,
+			height: 250,
+			cornerRadius: 12,
+			position: { x: width / 2, y: height / 2 },
+			blockInputEvents: true,
+		})
+		page8.add(anchorCenterPanel)
+		appctl.registerNode("anchor-center-panel", anchorCenterPanel)
+
+		const anchorTitle = createDebugLabel(this, {
+			text: "anchorToViewport() + safe area",
+			fontSize: 20,
+			isBold: true,
+			position: { x: 0, y: -86 },
+		})
+		anchorCenterPanel.add(anchorTitle)
+
+		const anchorHelp = createDebugLabel(this, {
+			text: "Resize the browser: corner widgets stay attached to viewport edges.",
+			fontSize: 13,
+			color: "#8f8f8f",
+			position: { x: 0, y: -48 },
+		})
+		anchorCenterPanel.add(anchorHelp)
+
+		const safeAreaLabel = createDebugLabel(this, {
+			text: "",
+			fontSize: 14,
+			color: "#a3a3a3",
+			position: { x: 0, y: -10 },
+		})
+		anchorCenterPanel.add(safeAreaLabel)
+		appctl.registerNode("anchor-safe-area-label", safeAreaLabel)
+
+		const topRightPanel = createDebugPanel(this, {
+			width: 220,
+			height: 90,
+			cornerRadius: 10,
+			fillColor: "#10131e",
+			strokeColor: "#5f86d8",
+			strokeThickness: 2,
+		})
+		topRightPanel.add(
+			createDebugLabel(this, {
+				text: "TOP RIGHT",
+				fontSize: 14,
+				color: "#9db8ff",
+				position: { x: 0, y: 0 },
+			}),
+		)
+		page8.add(topRightPanel)
+		appctl.registerNode("anchor-top-right-panel", topRightPanel)
+
+		const bottomLeftBadge = createDebugBadge(this, {
+			text: "BOTTOM LEFT",
+			bgColor: "#123017",
+			textColor: "#8de59d",
+			paddingX: 12,
+			paddingY: 8,
+		})
+		page8.add(bottomLeftBadge)
+		appctl.registerNode("anchor-bottom-left-badge", bottomLeftBadge)
+
+		const topLeftBadge = createDebugBadge(this, {
+			text: "TOP LEFT",
+			bgColor: "#3a2a12",
+			textColor: "#e5be7a",
+			paddingX: 12,
+			paddingY: 8,
+		})
+		page8.add(topLeftBadge)
+		appctl.registerNode("anchor-top-left-badge", topLeftBadge)
+
+		const bottomRightBadge = createDebugBadge(this, {
+			text: "BOTTOM RIGHT",
+			bgColor: "#2d1233",
+			textColor: "#e5a2ef",
+			paddingX: 12,
+			paddingY: 8,
+		})
+		page8.add(bottomRightBadge)
+		appctl.registerNode("anchor-bottom-right-badge", bottomRightBadge)
+
+		const topRightHandle = anchorToViewport({
+			scene: this,
+			target: topRightPanel,
+			anchor: "top-right",
+			offsetX: -20,
+			offsetY: 20,
+			safeArea: { extraInsets: { top: 8, right: 8 } },
+		})
+		anchorToViewport({
+			scene: this,
+			target: bottomLeftBadge,
+			anchor: "bottom-left",
+			offsetX: 20,
+			offsetY: -20,
+			safeArea: { extraInsets: { bottom: 8, left: 8 } },
+		})
+		anchorToViewport({
+			scene: this,
+			target: topLeftBadge,
+			anchor: "top-left",
+			offsetX: 20,
+			offsetY: 20,
+			safeArea: { extraInsets: { top: 8, left: 8 } },
+		})
+		anchorToViewport({
+			scene: this,
+			target: bottomRightBadge,
+			anchor: "bottom-right",
+			offsetX: -20,
+			offsetY: -20,
+			safeArea: { extraInsets: { bottom: 8, right: 8 } },
+		})
+
+		const refreshSafeAreaLabel = (): void => {
+			const insets = getSafeAreaInsets(this, { extraInsets: { top: 8, right: 8, bottom: 8, left: 8 } })
+			safeAreaLabel.setText(
+				`safeArea l:${Math.round(insets.left)} r:${Math.round(insets.right)} t:${Math.round(insets.top)} b:${Math.round(insets.bottom)}`,
+			)
+		}
+		refreshSafeAreaLabel()
+		this.scale.on("resize", refreshSafeAreaLabel)
+
+		const toggleAnchoredSizeBtn = createDebugButton(this, {
+			text: "Toggle TR size",
+			width: 170,
+			height: 44,
+			fontSize: 15,
+			position: { x: 0, y: 58 },
+			onClick: () => {
+				const nextW = topRightPanel.getPanelWidth() > 220 ? 220 : 300
+				topRightPanel.setPanelSize(nextW, 90)
+				topRightHandle.update()
+			},
+		})
+		anchorCenterPanel.add(toggleAnchoredSizeBtn)
+		appctl.registerNode("anchor-toggle-top-right-size", toggleAnchoredSizeBtn)
+
+		// ── Page 9: layoutAuto Scheduler ──
+		const page9 = this.add.container(width / 2, contentY)
+		const autoPanel = createDebugPanel(this, {
+			width: 980,
+			height: 900,
+			cornerRadius: 12,
+			position: { x: 0, y: 0 },
+			blockInputEvents: true,
+		})
+		page9.add(autoPanel)
+		appctl.registerNode("layout-auto-panel", autoPanel)
+
+		const autoTitle = createDebugLabel(this, {
+			text: "layoutAuto() dirty scheduler",
+			fontSize: 20,
+			isBold: true,
+			position: { x: 0, y: -390 },
+		})
+		autoPanel.add(autoTitle)
+
+		const autoHint = createDebugLabel(this, {
+			text: "Mutate containers below; no direct .layout() calls in handlers.",
+			fontSize: 13,
+			color: "#8f8f8f",
+			position: { x: 0, y: -352 },
+		})
+		autoPanel.add(autoHint)
+
+		const autoScheduler = layoutAuto(this)
+
+		const autoRow = createRowContainer(this, { spacingX: 8 })
+		autoRow.setPosition(-430, -295)
+		autoPanel.add(autoRow)
+		appctl.registerNode("layout-auto-row", autoRow)
+
+		const autoGrid = createGridContainer(this, {
+			columns: 4,
+			cellWidth: 150,
+			cellHeight: 56,
+			spacingX: 10,
+			spacingY: 10,
+		})
+		autoGrid.setPosition(-430, -190)
+		autoPanel.add(autoGrid)
+		appctl.registerNode("layout-auto-grid", autoGrid)
+
+		const autoScroll = createDebugScrollContainer(this, {
+			width: 860,
+			height: 300,
+			position: { x: 0, y: 120 },
+			bgColor: "#0c0c0c",
+			strokeColor: "#3a3a3a",
+			strokeThickness: 2,
+			cornerRadius: 10,
+			paddingLeft: 8,
+			paddingRight: 12,
+			paddingTop: 8,
+			paddingBottom: 8,
+			scrollbarEnabled: true,
+			scrollbarWidth: 6,
+			scrollbarColor: "#a3a3a3",
+			scrollbarTrackColor: "#202020",
+		})
+		autoPanel.add(autoScroll)
+		appctl.registerNode("layout-auto-scroll", autoScroll)
+
+		const rowItems: Phaser.GameObjects.GameObject[] = []
+		const gridItems: Phaser.GameObjects.GameObject[] = []
+		const scrollEntries: Phaser.GameObjects.Text[] = []
+		const scrollContent = autoScroll.getContentContainer()
+
+		const relayoutScrollEntries = (): void => {
+			let cursorY = 0
+			for (const entry of scrollEntries) {
+				entry.setPosition(418, cursorY + entry.displayHeight / 2)
+				cursorY += entry.displayHeight + 8
+			}
+		}
+
+		const addRowItem = (): void => {
+			const item = createDebugBadge(this, {
+				text: `R${rowItems.length + 1}`,
+				bgColor: "#20412c",
+				textColor: "#9de0b3",
+			})
+			rowItems.push(item)
+			autoRow.addItem(item)
+			autoScheduler.markDirty(autoRow)
+		}
+
+		const addGridItem = (): void => {
+			const idx = gridItems.length + 1
+			const item = createDebugButton(this, {
+				text: `G${idx}`,
+				width: 120,
+				height: 44,
+				fontSize: 14,
+				onClick: () => console.log(`[layoutAuto] grid item clicked: G${idx}`),
+			})
+			gridItems.push(item)
+			autoGrid.addItem(item)
+			autoScheduler.markDirty(autoGrid)
+		}
+
+		const addScrollEntry = (): void => {
+			const entry = createDebugLabel(this, {
+				text: `Scroll line ${scrollEntries.length + 1}`,
+				fontSize: 14,
+				color: "#c9c9c9",
+				align: "left",
+			})
+			scrollEntries.push(entry)
+			scrollContent.add(entry)
+			relayoutScrollEntries()
+			autoScheduler.markDirty(autoScroll)
+		}
+
+		const removeLastAll = (): void => {
+			const rowLast = rowItems.pop()
+			if (rowLast) autoRow.remove(rowLast, true)
+
+			const gridLast = gridItems.pop()
+			if (gridLast) autoGrid.remove(gridLast, true)
+
+			const scrollLast = scrollEntries.pop()
+			if (scrollLast) {
+				scrollContent.remove(scrollLast, true)
+				relayoutScrollEntries()
+			}
+
+			autoScheduler.markDirtyMany([autoRow, autoGrid, autoScroll])
+		}
+
+		for (let i = 0; i < 6; i++) addRowItem()
+		for (let i = 0; i < 8; i++) addGridItem()
+		for (let i = 0; i < 14; i++) addScrollEntry()
+		autoScheduler.flush()
+
+		const autoSummary = createDebugLabel(this, {
+			text: "",
+			fontSize: 14,
+			color: "#a3a3a3",
+			position: { x: 0, y: 320 },
+		})
+		autoPanel.add(autoSummary)
+		const refreshAutoSummary = (): void => {
+			autoSummary.setText(
+				`row=${rowItems.length} grid=${gridItems.length} scroll=${scrollEntries.length} dirty=${autoScheduler.getDirtyCount()}`,
+			)
+		}
+		refreshAutoSummary()
+		this.events.on("postupdate", refreshAutoSummary)
+
+		const autoControls = createRowContainer(this, { spacingX: 10 })
+		const autoAddRowBtn = createDebugButton(this, {
+			text: "+Row",
+			width: 130,
+			height: 44,
+			fontSize: 14,
+			onClick: addRowItem,
+		})
+		const autoAddGridBtn = createDebugButton(this, {
+			text: "+Grid",
+			width: 130,
+			height: 44,
+			fontSize: 14,
+			onClick: addGridItem,
+		})
+		const autoAddScrollBtn = createDebugButton(this, {
+			text: "+Scroll",
+			width: 130,
+			height: 44,
+			fontSize: 14,
+			onClick: addScrollEntry,
+		})
+		const autoRemoveBtn = createDebugButton(this, {
+			text: "-All",
+			width: 130,
+			height: 44,
+			fontSize: 14,
+			onClick: removeLastAll,
+		})
+		autoControls.addItems([autoAddRowBtn, autoAddGridBtn, autoAddScrollBtn, autoRemoveBtn])
+		autoControls.layout()
+		autoControls.setPosition(-autoControls.getContentWidth() / 2, 370)
+		autoPanel.add(autoControls)
+		appctl.registerNode("layout-auto-add-row", autoAddRowBtn)
+		appctl.registerNode("layout-auto-add-grid", autoAddGridBtn)
+		appctl.registerNode("layout-auto-add-scroll", autoAddScrollBtn)
+		appctl.registerNode("layout-auto-remove-all", autoRemoveBtn)
+
+		this._pages = [page1, page2, page3, page4, page5, page6, page7, page8, page9]
 		const startPage = Math.min(
 			Math.max(0, (globalThis as any).__PLAYGROUND_START_PAGE ?? 0),
 			this._pages.length - 1,

@@ -70,6 +70,15 @@ The system is designed with a fluent, chainable API and dark-theme defaults matc
 - **`createGridContainer`**: Arranges children in a grid with configurable columns, cell size, and spacing.
 - **Usage**: Group related UI elements. After adding items via `addItem()` or `addItems()`, call `.layout()` to reposition children. Containers are invisible positioning helpers and can be nested.
 
+### Utility Helpers
+
+- **`bindDebugControl`**: Two-way model binding helper for debug controls.
+  - Supports model access via object path (`target` + `path`) or custom getter/setter.
+  - Polls model on `preupdate` and pushes control changes back through control events.
+- **`anchorToViewport`**: Anchors any game object to viewport edges/corners/center with optional safe-area insets and resize updates.
+- **`getSafeAreaInsets`**: Resolves safe-area insets in game units (CSS env insets + optional extra insets).
+- **`layoutAuto`**: Dirty layout scheduler; batches `.layout()` calls and flushes once per frame.
+
 ## Example: Creating a Settings Popup
 
 ```typescript

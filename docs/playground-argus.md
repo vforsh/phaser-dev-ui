@@ -34,7 +34,7 @@ argus eval-until pg "document.querySelector('canvas')" --total-timeout 10s
 
 ## Page Navigation
 
-The playground has 6 pages. Navigate via `_goToPage(index)` on the scene (0-indexed):
+The playground has 9 pages. Navigate via `_goToPage(index)` on the scene (0-indexed):
 
 ```bash
 # Go to page 4 (Scroll Container)
@@ -42,6 +42,9 @@ argus eval pg "window.appctl.getScene('PlaygroundScene')._goToPage(3)"
 
 # Go to page 1 (Buttons)
 argus eval pg "window.appctl.getScene('PlaygroundScene')._goToPage(0)"
+
+# Go to page 7 (bindDebugControl)
+argus eval pg "window.appctl.getScene('PlaygroundScene')._goToPage(6)"
 ```
 
 Pages:
@@ -54,6 +57,9 @@ Pages:
 | 3     | Scroll Container   |
 | 4     | Text + Icon Combos |
 | 5     | Panel Styles       |
+| 6     | bindDebugControl   |
+| 7     | Viewport Anchors   |
+| 8     | layoutAuto         |
 
 ---
 

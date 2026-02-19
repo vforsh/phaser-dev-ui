@@ -41,6 +41,8 @@ export interface CreateDebugScrollContainerOptions extends DebugScrollContainerS
 	wheelEnabled?: boolean
 	/** Wheel scroll step in px per tick (default: 24). */
 	wheelStep?: number
+	/** Enable touch/mouse drag scrolling (default: true). */
+	dragEnabled?: boolean
 	/** Position (optional). */
 	position?: Position
 }
@@ -77,10 +79,14 @@ export class DebugScrollContainer extends Phaser.GameObjects.Container {
 	private _scrollbarMinThumbHeight: number
 	private _wheelEnabled: boolean
 	private _wheelStep: number
+	private _dragEnabled: boolean
 
 	private _contentMinY = 0
 	private _contentHeight = 0
 	private _scrollY = 0
+	private _isDragging = false
+	private _dragStartY = 0
+	private _dragScrollStart = 0
 
 	private readonly _wheelHandler: (
 		pointer: Phaser.Input.Pointer,
@@ -90,6 +96,9 @@ export class DebugScrollContainer extends Phaser.GameObjects.Container {
 		deltaZ: number,
 		event?: Event,
 	) => void
+	private readonly _dragMoveHandler: (pointer: Phaser.Input.Pointer) => void
+	private readonly _dragUpHandler: () => void
+	private readonly _preUpdateHandler: () => void
 
 	constructor(scene: Phaser.Scene, options: CreateDebugScrollContainerOptions = {}) {
 		const {
@@ -110,6 +119,7 @@ export class DebugScrollContainer extends Phaser.GameObjects.Container {
 			scrollbarMinThumbHeight = 24,
 			wheelEnabled = true,
 			wheelStep = 24,
+			dragEnabled = true,
 			initialScrollY = 0,
 			position,
 		} = options
@@ -133,25 +143,47 @@ export class DebugScrollContainer extends Phaser.GameObjects.Container {
 		this._scrollbarMinThumbHeight = scrollbarMinThumbHeight
 		this._wheelEnabled = wheelEnabled
 		this._wheelStep = wheelStep
+		this._dragEnabled = dragEnabled
 		this.setSize(width, height)
 
 		this._panel = scene.add.graphics()
 		this._content = scene.add.container(0, 0)
-		this._maskGraphics = scene.add.graphics()
+		this._maskGraphics = new Phaser.GameObjects.Graphics(scene)
 		this._scrollbar = scene.add.graphics()
 		this._wheelZone = scene.add.zone(0, 0, 1, 1).setInteractive()
 		this._wheelZone.input!.cursor = "default"
 
 		this._contentMask = this._maskGraphics.createGeometryMask()
 		this._content.setMask(this._contentMask)
-		this._maskGraphics.setVisible(false)
 
-		this.add([this._panel, this._wheelZone, this._content, this._scrollbar, this._maskGraphics])
+		this.add([this._panel, this._wheelZone, this._content, this._scrollbar])
+
+		this._preUpdateHandler = () => this.syncMaskPosition()
+		scene.events.on("preupdate", this._preUpdateHandler)
 
 		this._wheelHandler = (_pointer, currentlyOver, _deltaX, deltaY, _deltaZ, event) => {
 			this.handleWheel(currentlyOver, deltaY, event)
 		}
 		scene.input.on("wheel", this._wheelHandler)
+
+		this._wheelZone.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+			if (!this._dragEnabled) return
+			this._isDragging = true
+			this._dragStartY = pointer.y
+			this._dragScrollStart = this._scrollY
+		})
+
+		this._dragMoveHandler = (pointer: Phaser.Input.Pointer) => {
+			if (!this._isDragging) return
+			const deltaY = this._dragStartY - pointer.y
+			this.setScrollY(this._dragScrollStart + deltaY)
+		}
+		scene.input.on("pointermove", this._dragMoveHandler)
+
+		this._dragUpHandler = () => {
+			this._isDragging = false
+		}
+		scene.input.on("pointerup", this._dragUpHandler)
 
 		this.layout()
 		this.setScrollY(initialScrollY)
@@ -241,6 +273,12 @@ export class DebugScrollContainer extends Phaser.GameObjects.Container {
 		return this
 	}
 
+	setDragEnabled(enabled: boolean): this {
+		this._dragEnabled = enabled
+		if (!enabled) this._isDragging = false
+		return this
+	}
+
 	setScrollbarEnabled(enabled: boolean): this {
 		if (this._scrollbarEnabled === enabled) return this
 		this._scrollbarEnabled = enabled
@@ -288,8 +326,14 @@ export class DebugScrollContainer extends Phaser.GameObjects.Container {
 	}
 
 	override destroy(fromScene?: boolean): void {
-		if (this.scene) this.scene.input.off("wheel", this._wheelHandler)
+		if (this.scene) {
+			this.scene.input.off("wheel", this._wheelHandler)
+			this.scene.input.off("pointermove", this._dragMoveHandler)
+			this.scene.input.off("pointerup", this._dragUpHandler)
+			this.scene.events.off("preupdate", this._preUpdateHandler)
+		}
 		this._content.clearMask(true)
+		this._maskGraphics.destroy()
 		super.destroy(fromScene)
 	}
 
@@ -319,10 +363,21 @@ export class DebugScrollContainer extends Phaser.GameObjects.Container {
 		this._maskGraphics.clear()
 		this._maskGraphics.fillStyle(0xffffff, 1)
 		this._maskGraphics.fillRoundedRect(viewportLeft, viewportTop, viewportWidth, viewportHeight, clipRadius)
-		this._maskGraphics.setVisible(false)
 
 		this._wheelZone.setPosition(viewportLeft + viewportWidth / 2, viewportTop + viewportHeight / 2)
 		this._wheelZone.setSize(viewportWidth, viewportHeight)
+	}
+
+	/**
+	 * Syncs the mask graphics position to this container's world transform.
+	 *
+	 * Phaser's GeometryMask renders the mask graphics without the parent
+	 * container's transform matrix, so we position the standalone graphics
+	 * at the container's world origin each frame.
+	 */
+	private syncMaskPosition(): void {
+		const matrix = this.getWorldTransformMatrix()
+		this._maskGraphics.setPosition(matrix.tx, matrix.ty)
 	}
 
 	private updateContentMetrics(): void {

@@ -26,6 +26,8 @@ export interface CreateDebugProgressBarOptions extends DebugProgressBarStyleOpti
 export class DebugProgressBar extends Phaser.GameObjects.Container {
 	private _track: Phaser.GameObjects.Graphics
 	private _fill: Phaser.GameObjects.Graphics
+	private _fillMaskGraphics: Phaser.GameObjects.Graphics
+	private _fillMask: Phaser.Display.Masks.GeometryMask
 	private _width: number
 	private _height: number
 	private _trackColor: HexColor
@@ -56,6 +58,13 @@ export class DebugProgressBar extends Phaser.GameObjects.Container {
 
 		this._track = scene.add.graphics()
 		this._fill = scene.add.graphics()
+
+		// Mask graphics lives outside the container so GeometryMask
+		// coordinates match the fill's world position.
+		this._fillMaskGraphics = scene.add.graphics()
+		this._fillMaskGraphics.setVisible(false)
+		this._fillMask = this._fillMaskGraphics.createGeometryMask()
+		this._fill.setMask(this._fillMask)
 
 		this.add([this._track, this._fill])
 		this.redraw()
@@ -99,6 +108,12 @@ export class DebugProgressBar extends Phaser.GameObjects.Container {
 		return this
 	}
 
+	override destroy(fromScene?: boolean): void {
+		this._fill.clearMask(true)
+		this._fillMaskGraphics.destroy()
+		super.destroy(fromScene)
+	}
+
 	setStyle(options: DebugProgressBarStyleOptions): this {
 		if (options.trackColor) this._trackColor = options.trackColor
 		if (options.fillColor) this._fillColor = options.fillColor
@@ -136,10 +151,20 @@ export class DebugProgressBar extends Phaser.GameObjects.Container {
 		const c = hexToColorAlpha(this._fillColor)
 
 		this._fill.clear()
+		this._fillMaskGraphics.clear()
+
 		if (fillWidth <= 0) return
 
+		// Draw full-width rounded rect for correct corner shapes
 		this._fill.fillStyle(c.color, c.alpha)
-		this._fill.fillRoundedRect(-halfW, -halfH, fillWidth, this._height, radius)
+		this._fill.fillRoundedRect(-halfW, -halfH, this._width, this._height, radius)
+
+		// Mask lives outside the container — draw in world coordinates
+		const wt = this.getWorldTransformMatrix()
+		const worldX = wt.tx
+		const worldY = wt.ty
+		this._fillMaskGraphics.fillStyle(0xffffff, 1)
+		this._fillMaskGraphics.fillRect(worldX - halfW, worldY - halfH, fillWidth, this._height)
 	}
 }
 

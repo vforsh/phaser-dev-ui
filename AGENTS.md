@@ -108,6 +108,18 @@ argus logs pg --levels error,warning
 
 ---
 
+## Publishing
+
+Package: `@vforsh/phaser-dev-ui` on npm. `prepublishOnly` runs `bun run build` automatically.
+
+```bash
+npm publish --access public --//registry.npmjs.org/:_authToken=$NPM_TOKEN
+```
+
+Bump `version` in `package.json` before publishing a new release.
+
+---
+
 ## Adding a New Primitive
 
 1. Create `src/DebugXxx.ts` with class extending appropriate Phaser game object.

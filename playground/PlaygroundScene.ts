@@ -388,21 +388,122 @@ export class PlaygroundScene extends Phaser.Scene {
 		appctl.registerNode("scroll-main", scrollView)
 		scrollPanel.add(scrollView)
 
-		const listContainer = this.add.container(0, 0)
-		for (let i = 0; i < 14; i++) {
-			const rowBtn = createDebugButton(this, {
+		const cx = 116 // center x for 216-wide items in 260-wide viewport
+		let cursorY = 0
+		const gap = 10
+		const scrollItems: Phaser.GameObjects.GameObject[] = []
+
+		// Section header
+		const sectionHeader = createDebugLabel(this, {
+			text: "Mixed Content",
+			fontSize: 16,
+			isBold: true,
+			color: "#e0e0e0",
+		})
+		sectionHeader.setPosition(cx, cursorY + sectionHeader.displayHeight / 2)
+		cursorY += sectionHeader.displayHeight + gap
+		scrollItems.push(sectionHeader)
+
+		// Standard buttons
+		for (let i = 0; i < 4; i++) {
+			const btn = createDebugButton(this, {
 				text: `Action ${i + 1}`,
 				width: 216,
 				height: 34,
 				fontSize: 14,
 				onClick: () => console.log(`Scroll item clicked: ${i + 1}`),
 			})
-			rowBtn.setPosition(116, 22 + i * 42)
-			listContainer.add(rowBtn)
-			appctl.registerNode(`scroll-item-${i + 1}`, rowBtn)
+			btn.setPosition(cx, cursorY + 17)
+			cursorY += 34 + gap
+			scrollItems.push(btn)
+			appctl.registerNode(`scroll-item-${i + 1}`, btn)
 		}
 
-		scrollView.addItem(listContainer)
+		// Badges (individually positioned)
+		const badgeData = [
+			{ text: "Alpha", color: "#cc3333" },
+			{ text: "Beta", color: "#cc8800" },
+			{ text: "Stable", color: "#33aa33" },
+		]
+		let badgeX = 30
+		for (const bd of badgeData) {
+			const badge = createDebugBadge(this, { text: bd.text, bgColor: bd.color })
+			badge.setPosition(badgeX + badge.displayWidth / 2, cursorY + badge.displayHeight / 2)
+			badgeX += badge.displayWidth + 8
+			scrollItems.push(badge)
+		}
+		cursorY += 24 + gap * 2
+
+		// Subtitle
+		const subtitle = createDebugLabel(this, {
+			text: "Progress Indicators",
+			fontSize: 14,
+			color: "#888888",
+		})
+		subtitle.setPosition(cx, cursorY + subtitle.displayHeight / 2)
+		cursorY += subtitle.displayHeight + gap
+		scrollItems.push(subtitle)
+
+		// Progress bars
+		const scrollProgress1 = createDebugProgressBar(this, {
+			width: 216,
+			height: 10,
+			fillColor: "#4caf50",
+			value: 0.75,
+		})
+		scrollProgress1.setPosition(cx, cursorY + 5)
+		cursorY += 10 + gap
+		scrollItems.push(scrollProgress1)
+
+		const scrollProgress2 = createDebugProgressBar(this, {
+			width: 216,
+			height: 10,
+			fillColor: "#2196f3",
+			value: 0.4,
+		})
+		scrollProgress2.setPosition(cx, cursorY + 5)
+		cursorY += 10 + gap
+		scrollItems.push(scrollProgress2)
+
+		// Tall button
+		const tallBtn = createDebugButton(this, {
+			text: "Tall Button (64px)",
+			width: 216,
+			height: 64,
+			fontSize: 16,
+			onClick: () => console.log("Tall button clicked"),
+		})
+		tallBtn.setBgColor("#1a3a5c", "#2a5a8c").setTextColor("#66aaff", "#99ccff")
+		tallBtn.setPosition(cx, cursorY + 32)
+		cursorY += 64 + gap
+		scrollItems.push(tallBtn)
+		appctl.registerNode("scroll-item-tall", tallBtn)
+
+		// More standard buttons
+		for (let i = 5; i <= 12; i++) {
+			const btn = createDebugButton(this, {
+				text: `Item ${i}`,
+				width: 216,
+				height: 34,
+				fontSize: 14,
+				onClick: () => console.log(`Scroll item clicked: ${i}`),
+			})
+			btn.setPosition(cx, cursorY + 17)
+			cursorY += 34 + gap
+			scrollItems.push(btn)
+			appctl.registerNode(`scroll-item-${i}`, btn)
+		}
+
+		// Footer label
+		const footerLabel = createDebugLabel(this, {
+			text: "— End of List —",
+			fontSize: 12,
+			color: "#555555",
+		})
+		footerLabel.setPosition(cx, cursorY + footerLabel.displayHeight / 2)
+		scrollItems.push(footerLabel)
+
+		scrollView.addItems(scrollItems)
 		scrollView.layout()
 
 		const controlsRow = createRowContainer(this, { spacingX: 12 })

@@ -17,6 +17,9 @@ import {
 	createRowContainer,
 	createColumnContainer,
 	createGridContainer,
+	createDebugSeparator,
+	createDebugToggle,
+	createDebugSlider,
 	bindDebugControl,
 	anchorToViewport,
 	getSafeAreaInsets,
@@ -1428,7 +1431,213 @@ export class PlaygroundScene extends Phaser.Scene {
 		appctl.registerNode("layout-auto-add-scroll", autoAddScrollBtn)
 		appctl.registerNode("layout-auto-remove-all", autoRemoveBtn)
 
-		this._pages = [page1, page2, page3, page4, page5, page6, page7, page8, page9]
+		// ── Page 10: Slider, Toggle & Separator ──
+		const page10 = this.add.container(width / 2, contentY)
+		const stsPanel = createDebugPanel(this, {
+			width: PANEL_WIDTH,
+			height: PANEL_HEIGHT,
+			cornerRadius: 12,
+			position: { x: 0, y: 0 },
+			blockInputEvents: true,
+		})
+		page10.add(stsPanel)
+		appctl.registerNode("sts-panel", stsPanel)
+
+		const stsTitle = createDebugLabel(this, {
+			text: "Slider, Toggle & Separator",
+			fontSize: 20,
+			isBold: true,
+			position: { x: 0, y: PANEL_TITLE_Y },
+		})
+		stsPanel.add(stsTitle)
+
+		// -- Slider section --
+		const sliderSep = createDebugSeparator(this, {
+			width: 500,
+			label: "Slider",
+			color: "#666666",
+			position: { x: 0, y: -300 },
+		})
+		stsPanel.add(sliderSep)
+		appctl.registerNode("sep-slider", sliderSep)
+
+		const sliderDefault = createDebugSlider(this, {
+			width: 460,
+			position: { x: 0, y: -250 },
+		})
+		stsPanel.add(sliderDefault)
+		appctl.registerNode("slider-default", sliderDefault)
+
+		const sliderStyled = createDebugSlider(this, {
+			width: 460,
+			height: 28,
+			trackHeight: 10,
+			thumbRadius: 13,
+			trackColor: "#1a1a3a",
+			fillColor: "#2196f3",
+			thumbColor: "#bbddff",
+			value: 0.6,
+			position: { x: 0, y: -200 },
+		})
+		stsPanel.add(sliderStyled)
+		appctl.registerNode("slider-styled", sliderStyled)
+
+		const sliderStepLabel = createDebugLabel(this, {
+			text: "Step: 0.25 — Value: 0.00",
+			fontSize: 13,
+			color: "#888888",
+			position: { x: 0, y: -160 },
+		})
+		stsPanel.add(sliderStepLabel)
+
+		const sliderStep = createDebugSlider(this, {
+			width: 460,
+			step: 0.25,
+			fillColor: "#ff9800",
+			position: { x: 0, y: -130 },
+			onChange: (v) => {
+				sliderStepLabel.setText(`Step: 0.25 — Value: ${v.toFixed(2)}`)
+			},
+		})
+		stsPanel.add(sliderStep)
+		appctl.registerNode("slider-step", sliderStep)
+
+		// -- Toggle section --
+		const toggleSep = createDebugSeparator(this, {
+			width: 500,
+			label: "Toggle",
+			color: "#666666",
+			position: { x: 0, y: -80 },
+		})
+		stsPanel.add(toggleSep)
+		appctl.registerNode("sep-toggle", toggleSep)
+
+		const toggleDefault = createDebugToggle(this, {
+			position: { x: -180, y: -30 },
+		})
+		stsPanel.add(toggleDefault)
+		appctl.registerNode("toggle-default", toggleDefault)
+
+		const toggleDefaultLabel = createDebugLabel(this, {
+			text: "Default",
+			fontSize: 14,
+			color: "#a3a3a3",
+			position: { x: -120, y: -30 },
+		})
+		stsPanel.add(toggleDefaultLabel)
+
+		const toggleStyled = createDebugToggle(this, {
+			value: true,
+			width: 56,
+			height: 30,
+			onColor: "#2196f3",
+			offColor: "#333333",
+			thumbColor: "#e0e0e0",
+			position: { x: -10, y: -30 },
+		})
+		stsPanel.add(toggleStyled)
+		appctl.registerNode("toggle-styled", toggleStyled)
+
+		const toggleStyledLabel = createDebugLabel(this, {
+			text: "Styled",
+			fontSize: 14,
+			color: "#a3a3a3",
+			position: { x: 50, y: -30 },
+		})
+		stsPanel.add(toggleStyledLabel)
+
+		const toggleDisabled = createDebugToggle(this, {
+			value: true,
+			enabled: false,
+			position: { x: 140, y: -30 },
+		})
+		stsPanel.add(toggleDisabled)
+		appctl.registerNode("toggle-disabled", toggleDisabled)
+
+		const toggleDisabledLabel = createDebugLabel(this, {
+			text: "Disabled",
+			fontSize: 14,
+			color: "#a3a3a3",
+			position: { x: 210, y: -30 },
+		})
+		stsPanel.add(toggleDisabledLabel)
+
+		const toggleValueLabel = createDebugLabel(this, {
+			text: "default: off | styled: on",
+			fontSize: 13,
+			color: "#888888",
+			position: { x: 0, y: 20 },
+		})
+		stsPanel.add(toggleValueLabel)
+
+		const refreshToggleLabel = (): void => {
+			toggleValueLabel.setText(
+				`default: ${toggleDefault.getValue() ? "on" : "off"} | styled: ${toggleStyled.getValue() ? "on" : "off"}`,
+			)
+		}
+		toggleDefault.onValueChanged(() => refreshToggleLabel())
+		toggleStyled.onValueChanged(() => refreshToggleLabel())
+
+		// -- Separator section --
+		const sepSep = createDebugSeparator(this, {
+			width: 500,
+			label: "Separator",
+			color: "#666666",
+			position: { x: 0, y: 70 },
+		})
+		stsPanel.add(sepSep)
+		appctl.registerNode("sep-separator", sepSep)
+
+		const sepPlain = createDebugSeparator(this, {
+			width: 460,
+			position: { x: 0, y: 120 },
+		})
+		stsPanel.add(sepPlain)
+		appctl.registerNode("sep-plain", sepPlain)
+
+		const sepLabeled = createDebugSeparator(this, {
+			width: 460,
+			label: "Section",
+			position: { x: 0, y: 170 },
+		})
+		stsPanel.add(sepLabeled)
+		appctl.registerNode("sep-labeled", sepLabeled)
+
+		const sepThin = createDebugSeparator(this, {
+			width: 200,
+			thickness: 1,
+			color: "#555555",
+			position: { x: -80, y: 220 },
+		})
+		stsPanel.add(sepThin)
+		appctl.registerNode("sep-thin", sepThin)
+
+		const sepThick = createDebugSeparator(this, {
+			width: 200,
+			thickness: 4,
+			color: "#ff6b6b",
+			position: { x: 80, y: 220 },
+		})
+		stsPanel.add(sepThick)
+		appctl.registerNode("sep-thick", sepThick)
+
+		const sepThinLabel = createDebugLabel(this, {
+			text: "Thin (1px)",
+			fontSize: 12,
+			color: "#666666",
+			position: { x: -80, y: 245 },
+		})
+		stsPanel.add(sepThinLabel)
+
+		const sepThickLabel = createDebugLabel(this, {
+			text: "Thick (4px)",
+			fontSize: 12,
+			color: "#666666",
+			position: { x: 80, y: 245 },
+		})
+		stsPanel.add(sepThickLabel)
+
+		this._pages = [page1, page2, page3, page4, page5, page6, page7, page8, page9, page10]
 		const startPage = Math.min(
 			Math.max(0, (globalThis as any).__PLAYGROUND_START_PAGE ?? 0),
 			this._pages.length - 1,

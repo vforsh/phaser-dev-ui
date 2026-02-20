@@ -54,6 +54,9 @@ src/                     Library source (TypeScript)
   DebugBadge.ts           Compact auto-sizing text badge
   DebugProgressBar.ts     Horizontal 0–1 progress bar
   DebugSwitchButton.ts    Cycling option selector with arrow navigation
+  DebugSeparator.ts       Horizontal divider line with optional centered label
+  DebugToggle.ts          Boolean on/off pill toggle switch
+  DebugSlider.ts          Interactive continuous slider with track/fill/thumb
   DebugScrollContainer.ts Masked vertical scroll viewport + optional scrollbar
   DebugRowContainer.ts    Horizontal layout container
   DebugColumnContainer.ts Vertical layout container

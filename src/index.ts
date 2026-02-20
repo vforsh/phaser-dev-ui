@@ -34,6 +34,18 @@ export type { CreateDebugProgressBarOptions, DebugProgressBarStyleOptions } from
 export { DebugSwitchButton, createDebugSwitchButton } from "./DebugSwitchButton.js"
 export type { CreateDebugSwitchButtonOptions, SwitchButtonOption, SwitchOptions } from "./DebugSwitchButton.js"
 
+// Separator
+export { DebugSeparator, createDebugSeparator } from "./DebugSeparator.js"
+export type { CreateDebugSeparatorOptions } from "./DebugSeparator.js"
+
+// Toggle
+export { DebugToggle, createDebugToggle } from "./DebugToggle.js"
+export type { CreateDebugToggleOptions, DebugToggleStyleOptions } from "./DebugToggle.js"
+
+// Slider
+export { DebugSlider, createDebugSlider } from "./DebugSlider.js"
+export type { CreateDebugSliderOptions, DebugSliderStyleOptions } from "./DebugSlider.js"
+
 // Layout Containers
 export { DebugRowContainer, createRowContainer } from "./DebugRowContainer.js"
 export type { CreateRowContainerOptions } from "./DebugRowContainer.js"

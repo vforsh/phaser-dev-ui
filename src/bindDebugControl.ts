@@ -247,6 +247,7 @@ function inferAdapter<TControl, TValue>(control: TControl): Partial<DebugControl
 
 	const hasValueApi = typeof anyControl.getValue === "function" && typeof anyControl.setValue === "function"
 	if (hasValueApi) {
+		const canSubscribe = typeof anyControl.on === "function" && typeof anyControl.off === "function"
 		return {
 			read: (ctrl) => {
 				const c = ctrl as unknown as { getValue: () => TValue }
@@ -256,6 +257,17 @@ function inferAdapter<TControl, TValue>(control: TControl): Partial<DebugControl
 				const c = ctrl as unknown as { setValue: (nextValue: TValue) => void }
 				c.setValue(value)
 			},
+			subscribe: canSubscribe
+				? (ctrl, onValue) => {
+						const c = ctrl as unknown as {
+							on: (event: string, cb: (value: TValue) => void) => void
+							off: (event: string, cb: (value: TValue) => void) => void
+						}
+						const handler = (value: TValue) => onValue(value)
+						c.on("value-changed", handler)
+						return () => c.off("value-changed", handler)
+					}
+				: undefined,
 		} as Partial<DebugControlAdapter<TControl, TValue>>
 	}
 

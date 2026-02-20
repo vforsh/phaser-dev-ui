@@ -18,7 +18,6 @@ Pure-code debug UI primitives library for Phaser 3. Bun + TypeScript.
 - **Scene parameter**: Factory functions take `Phaser.Scene` as first arg. The constructor calls `scene.add.existing(this)`.
 - **Dark theme defaults**: Black backgrounds, `#a3a3a3` strokes/text, Verdana font. Match existing primitives.
 - **Coordinate system**: Phaser's top-left origin, Y-down. All primitives use origin `(0.5, 0.5)`.
-- **Git diff**: Always `git --no-pager diff` or `git diff | cat`.
 
 ---
 
@@ -89,7 +88,7 @@ dist/                    Build output (git-ignored)
 Use the Argus CLI to inspect, screenshot, and automate the playground via CDP. Full guide: [`docs/playground-argus.md`](docs/playground-argus.md).
 
 ```bash
-bun run playground                                    # start dev server (prints port)
+bun run playground                                     # start dev server (prints port)
 argus start --id pg --url localhost:<port>             # launch Chrome + watcher (background)
 argus eval-until pg "document.querySelector('canvas')" --total-timeout 10s
 argus eval pg "window.appctl.getScene('PlaygroundScene')._goToPage(3)"
@@ -99,7 +98,6 @@ argus logs pg --levels error,warning
 
 - `window.appctl` exposes `getNodeById`, `getSnapshot`, `emitKeyDown`, `emitClick`, `getPerfStats`, etc.
 - All registered primitives have test IDs — list with `window.appctl.getRegisteredTestIds()`.
-- Use `--no-page-indicator` flag for clean screenshots.
 
 ---
 
